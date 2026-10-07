@@ -41,6 +41,21 @@ node day-trading-akademia/tools/make-icons.mjs # az alkalmazásikonok újragener
 - A `day-trading-akademia/.openai/hosting.json` egy külső tárhely beállítása, amelyhez innen nincs
   feltöltőeszköz. Az élő oldalt a felhasználó frissíti.
 
+## Közzététel jelszóval
+
+A `dist` mappa a helyi, nyílt változat: **ezt soha ne tedd közzé**, mert a tananyag olvasható benne.
+A nyilvános kiadást a `node tools/build-public.mjs` állítja elő a `day-trading-akademia/public` mappába
+(a git nem követi). Ebben a tananyag egyetlen titkosított fájl (`content.enc.json`, AES-256-GCM,
+PBKDF2-SHA256 600 000 körrel), a `data.js`, a `content/index.js` és a `content/fogalomtar.js` helyén pedig
+átadó modul áll, amely a `js/lock/unlock.js`-re vár. Az alkalmazás többi modulja változatlan.
+
+- A jelszót a felhasználó adja meg (a szkript rákérdez, vagy `SITE_PASSWORD` környezeti változó). Ne te válaszd,
+  ne írd le csevegésben, és ne kerüljön a repóba.
+- A `tests/lock.test.mjs` tesztjelszava csak tesztekhez és helyi próbához való. Próba után töröld a `public` mappát.
+- Helyi próba: `preview_start` az `akademia-public` konfiggal.
+- A védelem a tananyagra szól. A felhasználó naplója és haladása nincs a szerveren: minden böngészőben külön tárolódik.
+- Ez megosztott jelszó, nem felhasználói fiók: nincs szerver, így nincs jelszó-visszaállítás és próbálkozáskorlát sem.
+
 ## Felépítés
 
 Minden a `day-trading-akademia/dist` alatt van. Az `index.html` egyetlen `<script type="module" src="./js/main.js">`
@@ -60,8 +75,10 @@ sort tölt be; a többi modul importtal kapcsolódik.
 | `js/logic/` | **Tiszta számolás**, DOM és állapot nélkül, tesztekkel: `calc`, `dates`, `schedule`, `review`, `readiness`, `search`. |
 | `js/views/` | Egy nézet vagy fül = egy modul (`overview`, `roadmap`, `readiness`, `library`, `lesson`, `quiz`, `review`, `labs`, `journal`, `questions`, `stats`, `weekly-review`, `settings`). |
 | `js/features/` | Nézetfüggetlen funkciók (`backup`, `attachments`, `idb`, `search`, `terms`, `study-time`, `pwa`, `webmcp`). |
+| `js/lock/` | A nyilvános kiadás belépése: `crypto.js` (böngészőben és Node-ban is fut), `unlock.js`. Helyben nem töltődik be. |
 | `js/charts.js`, `js/diagrams.js` | SVG vonaldiagram; leckeábrák és a laborokkal közös megjelenítők. |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Offline működés és telepíthetőség. |
+| `tools/` | `build-public.mjs` (titkosított kiadás), `make-icons.mjs` (ikonok). |
 | `tests/` | `node --test`: számolás, logika, tartalom épsége, offline lista és jelölők. |
 
 ### Hogyan kapcsolódnak a modulok
@@ -153,6 +170,8 @@ Papír + kék tinta: nyugodt tanulófelület, szándékosan nem „kereskedési 
   és mentési emlékeztető, naplóbejegyzés szerkesztése, képernyőképek, CSV export. Napi limit követése, heti review,
   Go/No-Go lista, mock evaluation követő. Offline működés (service worker, telepíthető). Leckeábrák, kattintható
   fogalmak, labor-hivatkozások a leckékből. Gyorskereső (Ctrl+K), billentyűk az ismétléshez. 48 teszt.
+- **5. kör:** indító (`Inditas.bat`) és látható indulási hibaüzenet. Jelszóval védett nyilvános kiadás:
+  titkosított tananyag, belépőoldal, „maradjak bejelentkezve”, kijelentkezés. 54 teszt.
 
 ### Nyitott ötletek
 

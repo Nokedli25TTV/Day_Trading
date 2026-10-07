@@ -5,3 +5,6 @@
 Thumbs.db
 .DS_Store
 .vscode/
+
+# A titkosított közzétételi csomag: a tools/build-public.mjs állítja elő
+day-trading-akademia/public/

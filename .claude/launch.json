@@ -4,8 +4,20 @@
     {
       "name": "akademia",
       "runtimeExecutable": "node",
-      "runtimeArgs": [".claude/static-server.mjs"],
+      "runtimeArgs": [
+        ".claude/static-server.mjs"
+      ],
       "port": 4317,
+      "autoPort": true
+    },
+    {
+      "name": "akademia-public",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".claude/static-server.mjs",
+        "day-trading-akademia/public"
+      ],
+      "port": 4318,
       "autoPort": true
     }
   ]

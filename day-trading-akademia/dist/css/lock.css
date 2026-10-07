@@ -1,0 +1,25 @@
+/* Belépőoldal a nyilvános (titkosított) kiadáshoz. Helyi használatnál rejtve marad. */
+
+html[data-locked] .app-shell,
+html[data-locked] .skip-link { display: none; }
+
+.lock { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; }
+.lock[hidden] { display: none; }
+
+.lock-card {
+  width: min(380px, 100%);
+  display: grid;
+  gap: 1rem;
+  padding: 2rem 1.75rem 1.75rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.lock-card .brand-mark { width: 40px; height: 40px; padding: 11px; }
+.lock-card h1 { font-size: 1.375rem; letter-spacing: -0.018em; }
+.lock-card h1 + p { margin-top: -0.6rem; color: var(--text-2); font-size: 0.9375rem; line-height: 1.5; }
+.lock-card .check-row { margin-top: -0.2rem; color: var(--text-2); font-size: 0.875rem; }
+.lock-card .primary-button { min-height: 46px; }
+.lock-error { min-height: 1.3rem; color: var(--bad); font-size: 0.875rem; font-weight: 550; }
+.lock-error:empty { min-height: 0; }

@@ -4,7 +4,8 @@ import { readFile } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = resolve(fileURLToPath(new URL(".", import.meta.url)), "..", "day-trading-akademia", "dist");
+const projectRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
+const root = resolve(projectRoot, process.argv[2] || "day-trading-akademia/dist");
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",

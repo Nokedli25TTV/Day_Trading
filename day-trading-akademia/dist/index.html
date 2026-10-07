@@ -93,9 +93,19 @@
               <section class="block" aria-labelledby="daily-title">
                 <div class="block-head">
                   <h2 id="daily-title">Mai menet</h2>
-                  <span class="block-head__aside">Napi cél: <strong id="daily-goal-chip">30 perc</strong></span>
+                  <span class="block-head__aside">Ma: <strong id="daily-goal-chip">0 / 30 perc</strong></span>
                 </div>
+                <div class="meter daily-meter"><span id="daily-meter"></span></div>
                 <ol class="steps" id="daily-steps"></ol>
+              </section>
+
+              <section class="block" aria-labelledby="week-title">
+                <div class="block-head">
+                  <h2 id="week-title">Ez a hét</h2>
+                  <span class="block-head__aside" id="week-range"></span>
+                </div>
+                <p class="block-lead" id="week-status"></p>
+                <ul class="lesson-rows week-lessons" id="week-lessons"></ul>
               </section>
 
               <section class="block" aria-labelledby="overview-roadmap-title">
@@ -116,7 +126,17 @@
                   <div><dt>Legjobb kvízeredmény</dt><dd id="stat-quiz">–</dd></div>
                   <div><dt>Naplóbejegyzés</dt><dd id="stat-journal">0</dd></div>
                   <div><dt>Megbeszélendő kérdés</dt><dd id="stat-questions">0</dd></div>
+                  <div><dt>Szabálykövetés a naplóban</dt><dd id="stat-rules">–</dd></div>
+                  <div><dt>Esedékes ismétlés</dt><dd id="stat-due">0</dd></div>
                 </dl>
+              </section>
+
+              <section class="rail-block" aria-labelledby="calendar-title">
+                <h2 id="calendar-title">Tanulási naptár</h2>
+                <div class="calendar-weekdays" aria-hidden="true"><span>H</span><span>K</span><span>Sze</span><span>Cs</span><span>P</span><span>Szo</span><span>V</span></div>
+                <div class="calendar" id="study-calendar"></div>
+                <p class="calendar-legend" aria-hidden="true">Kevesebb <i class="cal level-0"></i><i class="cal level-1"></i><i class="cal level-2"></i><i class="cal level-3"></i> A napi cél megvan</p>
+                <p class="calendar-summary" id="calendar-summary"></p>
               </section>
 
               <section class="rail-block principle" aria-labelledby="principle-title">
@@ -205,8 +225,11 @@
           <p class="view-lead">Ne csak olvasd: válaszolj, számolj, majd ellenőrizd a gondolatmenetedet.</p>
           <div class="tab-list" role="tablist" aria-label="Gyakorlóeszközök">
             <button class="practice-tab active" type="button" role="tab" aria-selected="true" aria-controls="quiz-panel" data-practice-tab="quiz">Tudáspróba</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="review-panel" data-practice-tab="review">Ismétlés <span class="tab-count" id="review-count" hidden></span></button>
             <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="risk-panel" data-practice-tab="risk">Kockázati labor</button>
             <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="order-panel" data-practice-tab="order">Megbízás-labor</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="flow-panel" data-practice-tab="flow">Orderflow-labor</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="prop-panel" data-practice-tab="prop">Prop szabályok</button>
           </div>
 
           <section class="practice-panel active" id="quiz-panel" data-practice-panel="quiz" role="tabpanel">
@@ -216,32 +239,42 @@
             </div>
           </section>
 
+          <section class="practice-panel" id="review-panel" data-practice-panel="review" role="tabpanel" hidden>
+            <div class="review">
+              <p class="review-status" id="review-status"></p>
+              <div id="review-content"></div>
+            </div>
+          </section>
+
           <section class="practice-panel" id="risk-panel" data-practice-panel="risk" role="tabpanel" hidden>
             <div class="tool-grid">
               <form class="tool" id="position-form" novalidate>
                 <h2>Pozícióméretező</h2>
-                <p>Előbb a kockázat, utána a méret. Az egységenkénti értéket a választott instrumentum specifikációja szerint add meg.</p>
+                <p>Előbb a kockázat, utána a méret. Válassz instrumentumot, vagy add meg kézzel egy egység értékét.</p>
                 <div class="form-grid two">
                   <label>Számlaérték<input name="account" type="number" min="0" step="0.01" value="10000" inputmode="decimal" /></label>
                   <label>Kockázat (%)<input name="riskPercent" type="number" min="0.01" max="100" step="0.01" value="0.5" inputmode="decimal" /></label>
                   <label>Belépőár<input name="entry" type="number" step="any" value="5100" inputmode="decimal" /></label>
                   <label>Stopár<input name="stop" type="number" step="any" value="5095" inputmode="decimal" /></label>
-                  <label class="full">1 egység értéke árpontonként<input name="unitValue" type="number" min="0.000001" step="any" value="5" inputmode="decimal" /></label>
+                  <label>Instrumentum<select name="instrument"><option value="custom">Egyéni</option><option value="MES" selected>MES (5 USD / pont)</option><option value="ES">ES (50 USD / pont)</option><option value="MNQ">MNQ (2 USD / pont)</option><option value="NQ">NQ (20 USD / pont)</option></select></label>
+                  <label>1 egység értéke árpontonként<input name="unitValue" type="number" min="0.000001" step="any" value="5" inputmode="decimal" /></label>
+                  <label class="full">Jutalék és tartalék egységenként<input name="costPerUnit" type="number" min="0" step="0.01" value="3.25" inputmode="decimal" /></label>
                 </div>
                 <div class="tool-result" id="position-result" role="status" aria-live="polite"></div>
               </form>
               <form class="tool" id="expectancy-form" novalidate>
                 <h2>Várható érték</h2>
-                <p>A találati arány önmagában kevés. Az expectancy megmutatja a rendszer átlagos R-eredményét trade-enként.</p>
-                <div class="form-grid">
-                  <label>Találati arány (%)<input name="winRate" type="number" min="0" max="100" step="0.1" value="45" inputmode="decimal" /></label>
+                <p>A találati arány önmagában kevés. Az expectancy megmutatja a rendszer átlagos R-eredményét trade-enként, költségekkel együtt.</p>
+                <div class="form-grid two">
+                  <label class="full">Találati arány (%)<input name="winRate" type="number" min="0" max="100" step="0.1" value="45" inputmode="decimal" /></label>
                   <label>Átlagos nyerő (R)<input name="avgWin" type="number" min="0" step="0.01" value="1.8" inputmode="decimal" /></label>
                   <label>Átlagos veszteség (R)<input name="avgLoss" type="number" min="0" step="0.01" value="1" inputmode="decimal" /></label>
+                  <label class="full">Átlagos költség (R)<input name="cost" type="number" min="0" step="0.01" value="0.1" inputmode="decimal" /></label>
                 </div>
                 <div class="tool-result" id="expectancy-result" role="status" aria-live="polite"></div>
               </form>
             </div>
-            <p class="fine-print">A kalkulátor tanulási és szimulációs célú. A kontraktusértéket, költségeket, slippage-et és brókerszabályokat külön ellenőrizd.</p>
+            <p class="fine-print">A kalkulátor tanulási és szimulációs célú. A pontértékek termékspecifikus adatok: a kontraktusértéket, a költségeket, a slippage-et és a brókerszabályokat mindig külön ellenőrizd.</p>
           </section>
 
           <section class="practice-panel" id="order-panel" data-practice-panel="order" role="tabpanel" hidden>
@@ -266,6 +299,78 @@
               </div>
             </div>
           </section>
+
+          <section class="practice-panel" id="flow-panel" data-practice-panel="flow" role="tabpanel" hidden>
+            <div class="lab">
+              <form class="lab__inputs" id="va-form" novalidate>
+                <h2>Value area építő</h2>
+                <p>Írd át a mennyiségeket, és kövesd lépésenként, hogyan áll össze a POC-ból a value area.</p>
+                <label>Célhányad<select name="target"><option value="70" selected>70%</option><option value="68">68%</option><option value="40">40% (core)</option><option value="80">80%</option></select></label>
+                <div class="table-wrap input-table"><table><thead><tr><th scope="col">Ár</th><th scope="col">Kötött mennyiség</th></tr></thead><tbody id="va-rows"></tbody></table></div>
+                <div class="button-row"><button class="secondary-button" type="button" id="va-example">A lecke példája</button><button class="secondary-button" type="button" id="va-random">Új véletlen profil</button></div>
+              </form>
+              <div class="lab__output">
+                <div class="profile" id="va-chart" role="img" aria-label="A profil sávjai árszintenként, a value area sorai kiemelve"></div>
+                <div class="tool-result" id="va-summary" role="status" aria-live="polite"></div>
+                <h3>Lépések</h3>
+                <ol class="lab-steps" id="va-steps"></ol>
+                <p class="fine-print">Egyenlő szomszédoknál itt a felső sor kerül be. Más platform eltérő szabályt használhat, ezért a saját szoftvered dokumentációját is nézd meg.</p>
+              </div>
+            </div>
+            <div class="lab">
+              <form class="lab__inputs lab__inputs--wide" id="fp-form" novalidate>
+                <h2>Footprint-számoló</h2>
+                <p>Egy gyertya árszintenkénti bid és ask volumene. Az arányok átlósan számolnak, ahogy a leckében.</p>
+                <div class="form-grid two">
+                  <label>Imbalance küszöb (x : 1)<input name="ratio" type="number" min="1" step="0.5" value="3" inputmode="decimal" /></label>
+                  <label>Minimális mennyiség<input name="minVolume" type="number" min="0" step="10" value="100" inputmode="numeric" /></label>
+                </div>
+                <div class="table-wrap input-table"><table><thead><tr><th scope="col">Ár</th><th scope="col">Bid</th><th scope="col">Ask</th><th scope="col" class="num">Sor deltája</th><th scope="col" class="num">Vételi arány</th><th scope="col" class="num">Eladási arány</th></tr></thead><tbody id="fp-rows"></tbody></table></div>
+                <div class="button-row"><button class="secondary-button" type="button" id="fp-example">A lecke példája</button></div>
+              </form>
+              <div class="lab__output">
+                <div class="tool-result" id="fp-summary" role="status" aria-live="polite"></div>
+                <p class="fine-print">A vételi arány az adott sor askját az eggyel alacsonyabb sor bidjéhez méri, az eladási arány az adott sor bidjét az eggyel magasabb sor askjához. A kiemelt cellák elérik a küszöböt és a minimális mennyiséget. A szám önmagában nem belépési jel.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="practice-panel" id="prop-panel" data-practice-panel="prop" role="tabpanel" hidden>
+            <div class="lab">
+              <form class="lab__inputs" id="drawdown-form" novalidate>
+                <h2>Drawdown-szimulátor</h2>
+                <p>Ugyanaz az öt nap, három küszöbtípus. Írd át a napi értékeket, és nézd meg, melyik szabály hol fogy el.</p>
+                <div class="form-grid two">
+                  <label>Kezdő egyenleg<input name="startBalance" type="number" min="1" step="1000" value="50000" inputmode="decimal" /></label>
+                  <label>Maximális visszaesés<input name="maxDrawdown" type="number" min="1" step="100" value="2000" inputmode="decimal" /></label>
+                  <label class="full">Forgatókönyv<select name="scenario"><option value="paper">Nagy papírprofit, majd visszaesés</option><option value="steady">Egyenletes hét</option><option value="losing">Vesztes sorozat</option></select></label>
+                </div>
+                <div class="table-wrap input-table"><table><thead><tr><th scope="col">Nap</th><th scope="col">Legmagasabb</th><th scope="col">Legalacsonyabb</th><th scope="col">Záró</th></tr></thead><tbody id="drawdown-days"></tbody></table></div>
+                <p class="fine-print">Az értékek a napi nyitóhoz mért eredmények. A szimulátor azt feltételezi, hogy napon belül előbb jön a csúcs, utána a mélypont. Egyes cégeknél a trailing küszöb megáll a kezdő egyenlegnél: ezt a szabályzatból ellenőrizd.</p>
+              </form>
+              <div class="lab__output">
+                <div class="chart-legend" id="drawdown-legend"></div>
+                <div class="chart-box" id="drawdown-chart"></div>
+                <div id="drawdown-result" role="status" aria-live="polite"></div>
+              </div>
+            </div>
+            <div class="lab">
+              <form class="lab__inputs" id="consistency-form" novalidate>
+                <h2>Consistency-kalkulátor</h2>
+                <p>Mekkora részt ad a legjobb napod az összprofitból, és mennyi hiányzik a küszöbhöz?</p>
+                <div class="form-grid two">
+                  <label>Profitcél<input name="target" type="number" min="0" step="100" value="3000" inputmode="decimal" /></label>
+                  <label>Küszöb (%)<input name="limitPercent" type="number" min="1" max="100" step="1" value="40" inputmode="decimal" /></label>
+                  <label>Legjobb nap profitja<input name="bestDay" type="number" min="0" step="50" value="1800" inputmode="decimal" /></label>
+                  <label>Eddigi összprofit<input name="totalProfit" type="number" min="0" step="50" value="3000" inputmode="decimal" /></label>
+                </div>
+              </form>
+              <div class="lab__output">
+                <div class="tool-result" id="consistency-result" role="status" aria-live="polite"></div>
+                <p class="fine-print">A küszöb és a szabály jellege cégenként eltér: van, ahol a megszegés bukás, máshol csak megnöveli a szükséges profitot. Mindig a cég saját, aktuális szabályzatát olvasd.</p>
+              </div>
+            </div>
+          </section>
         </section>
 
         <section class="app-view" id="view-naplo" data-view="naplo" aria-labelledby="page-title" hidden>
@@ -273,6 +378,11 @@
             <p class="view-lead">Rögzítsd a szimulált helyzetet, a szabálykövetést és a tanulságot. A napló ezen a böngészőn marad.</p>
             <button class="secondary-button" id="export-from-journal" type="button">Adatok exportálása</button>
           </div>
+          <div class="tab-list" role="tablist" aria-label="Napló részei">
+            <button class="practice-tab active" type="button" role="tab" aria-selected="true" aria-controls="journal-entries" data-journal-tab="entries">Bejegyzések</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="journal-stats" data-journal-tab="stats">Statisztika</button>
+          </div>
+          <div id="journal-entries" data-journal-panel="entries" role="tabpanel">
           <div class="journal-layout">
             <form class="journal-form" id="journal-form">
               <h2>Új bejegyzés</h2>
@@ -288,6 +398,16 @@
                 <label>Eredmény (R)<input name="resultR" type="number" step="0.01" inputmode="decimal" /></label>
                 <label>Érzelmi állapot<select name="emotion"><option value="nyugodt">Nyugodt</option><option value="bizonytalan">Bizonytalan</option><option value="kapkodo">Kapkodó</option><option value="frusztralt">Frusztrált</option><option value="tulbiztos">Túl magabiztos</option></select></label>
                 <label>Szabálykövetés<select name="ruleFollowed"><option value="igen">Igen</option><option value="reszben">Részben</option><option value="nem">Nem</option></select></label>
+                <details class="form-more full">
+                  <summary>Részletek: megfigyelés, hipotézis, MAE és MFE</summary>
+                  <div class="form-grid two">
+                    <label class="full">Megfigyelés (csak tény)<textarea name="observation" rows="3" maxlength="600" placeholder="Mi történt, szakkifejezések nélkül?"></textarea></label>
+                    <label class="full">Hipotézis<input name="hypothesis" type="text" maxlength="200" placeholder="Milyen folytatást vizsgáltál?" /></label>
+                    <label class="full">Érvénytelenítés<input name="invalidation" type="text" maxlength="200" placeholder="Milyen megfigyelés cáfolta volna?" /></label>
+                    <label>MAE (R)<input name="mae" type="number" min="0" step="0.01" inputmode="decimal" placeholder="legnagyobb ellened" /></label>
+                    <label>MFE (R)<input name="mfe" type="number" min="0" step="0.01" inputmode="decimal" placeholder="legnagyobb melletted" /></label>
+                  </div>
+                </details>
                 <label class="full">Tanulság<textarea name="lesson" rows="4" maxlength="600" placeholder="Tény → döntés → mi erősítette vagy cáfolta?" required></textarea></label>
               </div>
               <button class="primary-button" type="submit">Bejegyzés mentése</button>
@@ -299,6 +419,7 @@
                 <span class="block-head__aside" id="journal-count">0 db</span>
               </div>
               <div class="journal-list" id="journal-list"></div>
+              <button class="secondary-button journal-more" id="journal-more" type="button" hidden>További bejegyzések</button>
               <div class="empty-state" id="journal-empty"><h3>Még nincs bejegyzés</h3><p>Kezdj egy szimulált vagy replay helyzettel: egy mondatnyi tanulság is számít.</p></div>
             </section>
           </div>
@@ -317,6 +438,32 @@
             <ul class="question-list" id="question-list"></ul>
             <p class="empty-inline" id="question-empty">Még nincs félretett kérdésed.</p>
           </section>
+          </div>
+
+          <div id="journal-stats" data-journal-panel="stats" role="tabpanel" hidden>
+            <div class="toolbar">
+              <div class="segmented" role="group" aria-label="Mód szűrése">
+                <button class="filter-chip active" type="button" data-stats-mode="all">Mind</button>
+                <button class="filter-chip" type="button" data-stats-mode="paper">Szimulált</button>
+                <button class="filter-chip" type="button" data-stats-mode="replay">Replay</button>
+                <button class="filter-chip" type="button" data-stats-mode="live">Valós</button>
+              </div>
+              <p class="toolbar__aside" id="stats-sample"></p>
+            </div>
+            <div class="empty-state" id="stats-empty" hidden><h3>Még nincs miből számolni</h3><p>A statisztikához legalább egy olyan bejegyzés kell, amelynél megadtad az eredményt R-ben.</p><button class="secondary-button" type="button" data-journal-tab="entries">Bejegyzés rögzítése</button></div>
+            <div id="stats-body">
+              <p class="stats-note" id="stats-note"></p>
+              <dl class="figure-grid" id="stats-figures"></dl>
+              <section class="block" aria-labelledby="curve-title">
+                <div class="block-head"><h2 id="curve-title">R-görbe</h2><span class="block-head__aside">Halmozott eredmény kötésenként</span></div>
+                <div class="chart-box" id="stats-curve"></div>
+              </section>
+              <section class="block" aria-labelledby="breakdown-title">
+                <div class="block-head"><h2 id="breakdown-title">Bontások</h2><span class="block-head__aside">Csak az R-eredménnyel rögzített kötések</span></div>
+                <div class="stats-tables" id="stats-tables"></div>
+              </section>
+            </div>
+          </div>
         </section>
       </main>
     </div>
@@ -329,6 +476,7 @@
       <form id="settings-form" class="settings-form">
         <label>Tapasztalati szint<select name="experience"><option value="kezdo">Kezdő</option><option value="alapok">Ismerem az alapokat</option><option value="gyakorlo">Már gyakorlok</option></select></label>
         <label>Napi tanulási cél<select name="dailyGoal"><option value="15">15 perc</option><option value="30">30 perc</option><option value="45">45 perc</option><option value="60">60 perc</option></select></label>
+        <label>A terv kezdete<input name="startDate" type="date" /></label>
         <label>Megjelenés<select name="theme"><option value="system">Rendszer szerint</option><option value="light">Világos</option><option value="dark">Sötét</option></select></label>
         <label class="toggle-row"><span><strong>Csökkentett mozgás</strong><small>Minimalizálja az animációkat.</small></span><input name="reducedMotion" type="checkbox" /></label>
         <button class="primary-button" type="submit">Beállítások mentése</button>
@@ -349,6 +497,7 @@
     <script src="./content/01-alapmechanika.js" defer></script><script src="./content/02-kontextus.js" defer></script><script src="./content/03-kockazat.js" defer></script>
     <script src="./content/04-strategia.js" defer></script><script src="./content/05-pszichologia.js" defer></script><script src="./content/06-diligence.js" defer></script>
     <script src="./content/fogalomtar.js" defer></script>
+    <script src="./calc.js" defer></script><script src="./charts.js" defer></script><script src="./labs.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

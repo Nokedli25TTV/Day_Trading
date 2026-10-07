@@ -18,6 +18,13 @@
     })),
   );
   allLessons.forEach((lesson, index) => { lesson.globalIndex = index + 1; });
+  const CALC = window.TRADECRAFT_CALC;
+  const CHARTS = window.TRADECRAFT_CHARTS;
+  const TOTAL_WEEKS = Math.max(...allLessons.map((lesson) => lesson.week));
+  // Ismétlési időközök napban, dobozonként: a tudott kártya egyre ritkábban jön vissza.
+  const REVIEW_INTERVALS = [1, 2, 4, 8, 16, 32];
+  const STUDY_TICK_SECONDS = 15;
+  const IDLE_LIMIT_MS = 120000;
 
   const todayLabel = (() => {
     const label = new Intl.DateTimeFormat("hu-HU", { month: "long", day: "numeric", weekday: "long" }).format(new Date());
@@ -40,6 +47,7 @@
     profile: {
       experience: "kezdo",
       dailyGoal: 30,
+      startDate: localDateKey(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
@@ -48,6 +56,8 @@
     journalEntries: [],
     questions: [],
     activityDates: [],
+    reviews: {},
+    studyLog: {},
     settings: { reducedMotion: false, theme: "system" },
   });
 
@@ -60,29 +70,48 @@
   let noteTimer = null;
   let pendingNote = null;
   let quizRun = createQuizRun();
+  let journalTab = "entries";
+  let journalLimit = 12;
+  let statsMode = "all";
+  let reviewSession = null;
+  let lastInteraction = Date.now();
+
+  // Régi vagy importált mentés kiegészítése a hiányzó mezőkkel.
+  function normalizeState(parsed) {
+    const fallback = createDefaultState();
+    const object = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : {});
+    const profile = { ...fallback.profile, ...object(parsed.profile) };
+    // Régi mentésnél a terv kezdete a profil létrehozásának napja.
+    if (!object(parsed.profile).startDate) {
+      const created = new Date(profile.createdAt);
+      profile.startDate = localDateKey(Number.isNaN(created.getTime()) ? new Date() : created);
+    }
+    return {
+      ...fallback,
+      ...parsed,
+      schemaVersion: 1,
+      profile,
+      settings: { ...fallback.settings, ...object(parsed.settings) },
+      progress: object(parsed.progress),
+      quizAttempts: Array.isArray(parsed.quizAttempts) ? parsed.quizAttempts : [],
+      journalEntries: Array.isArray(parsed.journalEntries) ? parsed.journalEntries : [],
+      questions: Array.isArray(parsed.questions) ? parsed.questions : [],
+      activityDates: Array.isArray(parsed.activityDates) ? parsed.activityDates : [],
+      reviews: object(parsed.reviews),
+      studyLog: object(parsed.studyLog),
+    };
+  }
 
   function loadState() {
-    const fallback = createDefaultState();
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return fallback;
+      if (!raw) return createDefaultState();
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object") throw new Error("Invalid state");
-      return {
-        ...fallback,
-        ...parsed,
-        schemaVersion: 1,
-        profile: { ...fallback.profile, ...(parsed.profile || {}) },
-        settings: { ...fallback.settings, ...(parsed.settings || {}) },
-        progress: parsed.progress && typeof parsed.progress === "object" ? parsed.progress : {},
-        quizAttempts: Array.isArray(parsed.quizAttempts) ? parsed.quizAttempts : [],
-        journalEntries: Array.isArray(parsed.journalEntries) ? parsed.journalEntries : [],
-        questions: Array.isArray(parsed.questions) ? parsed.questions : [],
-        activityDates: Array.isArray(parsed.activityDates) ? parsed.activityDates : [],
-      };
+      return normalizeState(parsed);
     } catch {
       storageRecovered = true;
-      return fallback;
+      return createDefaultState();
     }
   }
 
@@ -115,6 +144,29 @@
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  }
+
+  function addDays(dateKey, days) {
+    const date = new Date(`${dateKey}T12:00:00`);
+    date.setDate(date.getDate() + days);
+    return localDateKey(date);
+  }
+
+  function daysBetween(fromKey, toKey) {
+    return Math.round((new Date(`${toKey}T12:00:00`) - new Date(`${fromKey}T12:00:00`)) / 86400000);
+  }
+
+  // Az időbélyegek UTC-ben tárolódnak, a „ma” viszont helyi nap.
+  function isToday(timestamp) {
+    return Boolean(timestamp) && localDateKey(new Date(timestamp)) === localDateKey();
+  }
+
+  function shortDate(dateKey) {
+    return new Intl.DateTimeFormat("hu-HU", { month: "short", day: "numeric" }).format(new Date(`${dateKey}T12:00:00`));
+  }
+
+  function signedR(value, digits = 2) {
+    return `${value > 0 ? "+" : value < 0 ? "−" : ""}${formatNumber(Math.abs(value), digits)}R`;
   }
 
   function recordActivity() {
@@ -232,10 +284,12 @@
 
   function lessonRowHTML(lesson, detailed = false) {
     const status = lessonStatus(lesson.id);
-    return `<li><button class="lesson-row${detailed ? " lesson-row--detailed" : ""} is-${status}" type="button" data-open-lesson="${lesson.id}">
+    const schedule = getSchedule();
+    const thisWeek = schedule.started && schedule.week === lesson.week;
+    return `<li><button class="lesson-row${detailed ? " lesson-row--detailed" : ""} is-${status}${thisWeek ? " is-this-week" : ""}" type="button" data-open-lesson="${lesson.id}">
       <span class="lesson-row__state" aria-hidden="true"></span>
       <span class="lesson-row__text"><strong>${escapeHTML(lesson.title)}</strong>${detailed ? `<span>${escapeHTML(lesson.summary)}</span>` : ""}</span>
-      <span class="lesson-row__meta lesson-row__week">${lesson.week}. hét</span>
+      <span class="lesson-row__meta lesson-row__week">${thisWeek ? "Ez a hét" : `${lesson.week}. hét`}</span>
       <span class="lesson-row__meta">${lesson.duration} perc</span>
       <span class="lesson-row__status">${STATUS_LABEL[status]}</span>
     </button></li>`;
@@ -250,6 +304,7 @@
     renderQuestions();
     renderSources();
     renderGlossary();
+    renderReview();
     applySettings();
   }
 
@@ -277,7 +332,9 @@
     setText("#stat-quiz", bestQuiz === null ? "–" : `${bestQuiz}%`);
     setText("#stat-journal", String(state.journalEntries.length));
     setText("#stat-questions", String(state.questions.length));
-    setText("#daily-goal-chip", `${state.profile.dailyGoal} perc`);
+    renderStudyTime();
+    renderWeek();
+    setText("#stat-rules", state.journalEntries.length ? `${formatNumber(CALC.journalStats(state.journalEntries).ruleRate, 0)}%` : "–");
 
     document.querySelector("#overview-roadmap").innerHTML = DATA.modules.map((module) => {
       const stats = getModuleStats(module);
@@ -285,11 +342,16 @@
       return `<li class="track ${status}">${ticksHTML(module)}<span class="track__num">${module.number}</span><strong>${escapeHTML(module.shortTitle)}</strong><small>${stats.completed}/${stats.total} lecke</small></li>`;
     }).join("");
 
-    const quizDoneToday = state.quizAttempts.some((attempt) => String(attempt.completedAt || "").startsWith(localDateKey()));
-    const journalDoneToday = state.journalEntries.some((entry) => String(entry.createdAt || "").startsWith(localDateKey()));
+    const today = localDateKey();
+    const dueCount = reviewCards().filter((card) => card.due <= today).length;
+    const reviewedToday = Object.values(state.reviews).some((review) => review.seen === today);
+    setText("#stat-due", String(dueCount));
+    const quizDoneToday = state.quizAttempts.some((attempt) => isToday(attempt.completedAt));
+    const journalDoneToday = state.journalEntries.some((entry) => isToday(entry.createdAt));
     document.querySelector("#daily-steps").innerHTML = [
       { title: next.title, detail: `${next.duration} perc · ${next.moduleTitle}`, done: isLessonComplete(next.id), action: "Lecke", attr: `data-open-lesson="${next.id}"` },
-      { title: "3–5 kvízkérdés", detail: "Aktív felidézés, azonnali magyarázattal", done: quizDoneToday, action: "Gyakorlás", attr: 'data-view-target="gyakorlas"' },
+      ...(dueCount || reviewedToday ? [{ title: dueCount ? `${dueCount} kártya ismétlése` : "Ismétlés", detail: "Önellenőrző kérdések és korábbi hibás válaszok", done: !dueCount, action: "Ismétlés", attr: 'data-view-target="gyakorlas" data-practice-open="review"' }] : []),
+      { title: "3–5 kvízkérdés", detail: "Aktív felidézés, azonnali magyarázattal", done: quizDoneToday, action: "Kvíz", attr: 'data-view-target="gyakorlas" data-practice-open="quiz"' },
       { title: "Egy mondatos review", detail: "Mit értettél meg, mi maradt kérdés?", done: journalDoneToday, action: "Napló", attr: 'data-view-target="naplo"' },
     ].map((item, index) => `<li class="step${item.done ? " done" : ""}"><span class="step__mark" aria-hidden="true">${item.done ? "✓" : index + 1}</span><div><strong>${escapeHTML(item.title)}</strong><small>${escapeHTML(item.detail)}${item.done ? " · ma kész" : ""}</small></div><button class="text-button" type="button" ${item.attr}>${item.action}</button></li>`).join("");
   }
@@ -320,7 +382,7 @@
         <details data-module="${module.id}" ${open ? "open" : ""}>
           <summary>
             <span class="module__num">${module.number}</span>
-            <div><span class="module__when">${escapeHTML(module.duration)} · ${escapeHTML(module.weeks)} ${badge}</span><h3>${escapeHTML(module.title)}</h3><p>${escapeHTML(module.description)}</p></div>
+            <div><span class="module__when">${escapeHTML(module.duration)} · ${escapeHTML(module.weeks)} · ${weekRangeLabel(getSchedule().start, Math.min(...module.lessons.map((lesson) => lesson.week)), Math.max(...module.lessons.map((lesson) => lesson.week)))} ${badge}</span><h3>${escapeHTML(module.title)}</h3><p>${escapeHTML(module.description)}</p></div>
             <span class="module__progress">${ticksHTML(module)}<span>${stats.completed}/${stats.total}</span></span>
             <svg class="module__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </summary>
@@ -394,17 +456,21 @@
     const entries = [...state.journalEntries].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
     setText("#journal-count", `${entries.length} db`);
     document.querySelector("#journal-empty").hidden = entries.length > 0;
-    list.innerHTML = entries.slice(0, 12).map((entry) => {
+    document.querySelector("#journal-more").hidden = entries.length <= journalLimit;
+    const detail = (label, value) => (value ? `<p class="journal-entry__detail"><strong>${label}:</strong> ${escapeHTML(value)}</p>` : "");
+    const excursion = (label, value) => (value !== "" && value != null && Number.isFinite(Number(value)) ? `<span>${label} ${formatNumber(Number(value))}R</span>` : "");
+    list.innerHTML = entries.slice(0, journalLimit).map((entry) => {
       const hasResult = entry.resultR !== "" && entry.resultR != null && Number.isFinite(Number(entry.resultR));
       const result = Number(entry.resultR);
       const resultClass = !hasResult || result === 0 ? "" : result > 0 ? "is-good" : "is-bad";
-      const resultLabel = hasResult ? `${result > 0 ? "+" : ""}${formatNumber(result)}R` : "R: –";
       return `<article class="journal-entry">
         <div class="journal-entry__top"><div><strong>${escapeHTML(entry.symbol)} · ${escapeHTML(directionLabel(entry.direction))}</strong><small>${formatDate(entry.tradedAt)} · ${escapeHTML(modeLabel(entry.mode))}</small></div><button class="delete-entry" type="button" data-delete-entry="${entry.id}" aria-label="Bejegyzés törlése">×</button></div>
-        <div class="journal-entry__badges"><span class="${resultClass}">${resultLabel}</span><span>${escapeHTML(entry.setup)}</span><span>Szabály: ${escapeHTML(ruleLabel(entry.ruleFollowed))}</span><span>${escapeHTML(emotionLabel(entry.emotion))}</span></div>
+        <div class="journal-entry__badges"><span class="${resultClass}">${hasResult ? signedR(result) : "R: –"}</span><span>${escapeHTML(entry.setup)}</span><span>Szabály: ${escapeHTML(ruleLabel(entry.ruleFollowed))}</span><span>${escapeHTML(emotionLabel(entry.emotion))}</span>${excursion("MAE", entry.mae)}${excursion("MFE", entry.mfe)}</div>
+        ${detail("Megfigyelés", entry.observation)}${detail("Hipotézis", entry.hypothesis)}${detail("Érvénytelenítés", entry.invalidation)}
         <p>${escapeHTML(entry.lesson)}</p>
       </article>`;
     }).join("");
+    if (journalTab === "stats") renderStats();
   }
 
   function renderQuestions() {
@@ -538,6 +604,11 @@
     const correct = choice === question.correct;
     if (correct) quizRun.score += 1;
     quizRun.answers.push({ question: question.question, lesson: question.lesson, correct });
+    if (!correct) {
+      state.reviews[quizCardId(question)] = { box: 0, due: addDays(localDateKey(), 1) };
+      saveState("Kérdés az ismétlők között");
+      renderReview();
+    }
     renderQuiz();
   }
 
@@ -555,50 +626,265 @@
     renderQuiz();
   }
 
-  function resultRowsHTML(rows) {
-    return `<dl class="result-list">${rows.map((row) => `<div class="${row.className || ""}"><dt>${row.label}</dt><dd>${row.value}</dd></div>`).join("")}</dl>`;
+  // ---------- Heti terv ----------
+
+  function getSchedule() {
+    const today = localDateKey();
+    const start = state.profile.startDate || today;
+    const elapsed = daysBetween(start, today);
+    return { start, started: elapsed >= 0, week: Math.floor(Math.max(0, elapsed) / 7) + 1 };
   }
 
-  function renderPositionResult() {
-    const form = document.querySelector("#position-form");
-    const input = formObject(form);
-    const hasEmpty = [input.account, input.riskPercent, input.entry, input.stop, input.unitValue].some((value) => String(value).trim() === "");
-    const account = Number(input.account), riskPercent = Number(input.riskPercent), entry = Number(input.entry), stop = Number(input.stop), unitValue = Number(input.unitValue);
-    const distance = Math.abs(entry - stop);
-    const result = document.querySelector("#position-result");
-    if (hasEmpty || ![account, riskPercent, entry, stop, unitValue].every(Number.isFinite) || account <= 0 || riskPercent <= 0 || unitValue <= 0 || distance <= 0) {
-      result.innerHTML = '<p class="result-hint">Adj meg pozitív számokat. A belépő és a stop nem lehet azonos.</p>';
-      return;
-    }
-    const riskBudget = account * riskPercent / 100;
-    const unitRisk = distance * unitValue;
-    const size = Math.floor(riskBudget / unitRisk);
-    result.innerHTML = resultRowsHTML([
-      { label: "Elméleti egész méret", value: `${formatNumber(size, 0)} egység`, className: "is-main" },
-      { label: "Kockázati keret", value: formatNumber(riskBudget) },
-      { label: "Stop-távolság", value: formatNumber(distance, 6) },
-      { label: "Tényleges kockázat, költségek előtt", value: formatNumber(size * unitRisk) },
-    ]);
+  function weekRangeLabel(start, fromWeek, toWeek = fromWeek) {
+    return `${shortDate(addDays(start, (fromWeek - 1) * 7))} – ${shortDate(addDays(start, toWeek * 7 - 1))}`;
   }
 
-  function renderExpectancyResult() {
-    const form = document.querySelector("#expectancy-form");
-    const input = formObject(form);
-    const hasEmpty = [input.winRate, input.avgWin, input.avgLoss].some((value) => String(value).trim() === "");
-    const winRate = Number(input.winRate), avgWin = Number(input.avgWin), avgLoss = Number(input.avgLoss);
-    const result = document.querySelector("#expectancy-result");
-    if (hasEmpty || ![winRate, avgWin, avgLoss].every(Number.isFinite) || winRate < 0 || winRate > 100 || avgWin < 0 || avgLoss < 0) {
-      result.innerHTML = '<p class="result-hint">A találati arány 0 és 100 között legyen, az R-értékek ne legyenek negatívak.</p>';
+  function renderWeek() {
+    const { start, started, week } = getSchedule();
+    const remaining = allLessons.filter((lesson) => !isLessonComplete(lesson.id));
+    let lessons = allLessons.filter((lesson) => lesson.week === Math.min(week, TOTAL_WEEKS));
+    let range = `${week}. hét · ${weekRangeLabel(start, week)}`;
+    let status;
+    if (!started) {
+      lessons = allLessons.filter((lesson) => lesson.week === 1);
+      range = `Kezdés: ${shortDate(start)}`;
+      status = "A terv még nem indult el. Addig is bármelyik lecke megnyitható.";
+    } else if (week > TOTAL_WEEKS) {
+      lessons = remaining.slice(0, 4);
+      range = `A ${TOTAL_WEEKS} hetes terv véget ért`;
+      status = remaining.length
+        ? `${remaining.length} lecke van még hátra. A tempó a tiéd: a beállításokban új kezdőnapot is megadhatsz.`
+        : "Minden lecke kész. Most a gyakorlás és a heti review számít.";
+    } else {
+      const behind = allLessons.filter((lesson) => lesson.week < week && !isLessonComplete(lesson.id)).length;
+      const ahead = allLessons.filter((lesson) => lesson.week > week && isLessonComplete(lesson.id)).length;
+      const left = lessons.filter((lesson) => !isLessonComplete(lesson.id)).length;
+      status = behind ? `${behind} lecke maradt el a korábbi hetekből. Előbb azokat pótold: a sorrend számít.`
+        : left ? `${left} lecke van hátra erre a hétre.`
+        : ahead ? `A heti leckék készen vannak, és ${ahead} leckével előrébb jársz a tervnél.`
+        : "A heti leckék készen vannak. Marad idő ismétlésre és replayre.";
+    }
+    setText("#week-range", range);
+    setText("#week-status", status);
+    document.querySelector("#week-lessons").innerHTML = lessons.map((lesson) => lessonRowHTML(lesson)).join("");
+  }
+
+  // ---------- Tanulási idő és naptár ----------
+
+  function studyMinutes(dateKey = localDateKey()) {
+    return Math.floor((Number(state.studyLog[dateKey]) || 0) / 60);
+  }
+
+  function renderStudyTime() {
+    const goal = Number(state.profile.dailyGoal) || 30;
+    setText("#daily-goal-chip", `${studyMinutes()} / ${goal} perc`);
+    setMeter("#daily-meter", studyMinutes() / goal);
+    renderCalendar();
+  }
+
+  // Öt hét hétfőtől vasárnapig, az utolsó sor az aktuális hét.
+  function renderCalendar() {
+    const container = document.querySelector("#study-calendar");
+    if (!container) return;
+    const today = localDateKey();
+    const goal = Number(state.profile.dailyGoal) || 30;
+    const weekday = (new Date().getDay() + 6) % 7;
+    const first = addDays(today, -weekday - 28);
+    let weekMinutes = 0;
+    let weekDays = 0;
+    container.innerHTML = Array.from({ length: 35 }, (_, index) => {
+      const key = addDays(first, index);
+      const minutes = studyMinutes(key);
+      const active = minutes > 0 || state.activityDates.includes(key);
+      const future = key > today;
+      if (index >= 28 && !future) { weekMinutes += minutes; if (active) weekDays += 1; }
+      const level = !active ? 0 : minutes >= goal ? 3 : minutes >= goal / 2 ? 2 : 1;
+      const label = `${shortDate(key)}: ${future ? "még hátravan" : !active ? "nem volt tanulás" : minutes ? `${minutes} perc` : "aktív nap"}`;
+      return `<i class="cal ${future ? "is-future" : `level-${level}`}${key === today ? " is-today" : ""}" title="${label}"></i>`;
+    }).join("");
+    const summary = `Ezen a héten ${weekMinutes} perc, ${weekDays} aktív nap.`;
+    container.setAttribute("role", "img");
+    container.setAttribute("aria-label", `Tanulási naptár az elmúlt öt hétről. ${summary}`);
+    setText("#calendar-summary", summary);
+  }
+
+  // Csak akkor számol, ha a lap látható és volt friss interakció.
+  function tickStudyTime() {
+    if (document.visibilityState !== "visible" || Date.now() - lastInteraction > IDLE_LIMIT_MS) return;
+    const today = localDateKey();
+    const before = studyMinutes(today);
+    state.studyLog[today] = (Number(state.studyLog[today]) || 0) + STUDY_TICK_SECONDS;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* a következő mentés jelzi a hibát */ }
+    const after = studyMinutes(today);
+    if (after === before) return;
+    renderStudyTime();
+    if (after === Number(state.profile.dailyGoal)) showToast(`Megvan a mai ${after} perc.`);
+  }
+
+  // ---------- Időzített ismétlés ----------
+
+  function hashText(text) {
+    let hash = 5381;
+    for (const character of text) hash = ((hash << 5) + hash + character.codePointAt(0)) >>> 0;
+    return hash.toString(36);
+  }
+
+  const quizCardId = (question) => `quiz:${hashText(question.question)}`;
+  const QUIZ_BY_CARD = new Map(DATA.quiz.map((question) => [quizCardId(question), question]));
+
+  // A pakli: a teljesített leckék önellenőrző kérdései és a korábban elrontott kvízkérdések.
+  function reviewCards() {
+    const cards = [];
+    allLessons.forEach((lesson) => (lesson.check || []).forEach((item, index) => {
+      const id = `check:${lesson.id}:${index}`;
+      const saved = state.reviews[id];
+      if (!saved && !isLessonComplete(lesson.id)) return;
+      const completed = new Date(state.progress[lesson.id]?.completedAt || Date.now());
+      cards.push({ id, front: item.q, back: item.a, lesson, box: saved?.box || 0, due: saved ? saved.due : addDays(localDateKey(completed), 1) });
+    }));
+    Object.keys(state.reviews).forEach((id) => {
+      const question = QUIZ_BY_CARD.get(id);
+      if (!question) return;
+      cards.push({ id, front: question.question, back: `**${question.options[question.correct]}** ${question.explanation}`, lesson: getLesson(question.lesson), box: state.reviews[id].box || 0, due: state.reviews[id].due, fromQuiz: true });
+    });
+    return cards;
+  }
+
+  function renderReview(focus = false) {
+    const content = document.querySelector("#review-content");
+    if (!content) return;
+    const today = localDateKey();
+    const cards = reviewCards();
+    const byId = new Map(cards.map((card) => [card.id, card]));
+    const due = cards.filter((card) => card.due <= today).sort((a, b) => a.due.localeCompare(b.due) || a.box - b.box);
+
+    const count = document.querySelector("#review-count");
+    count.hidden = due.length === 0;
+    count.textContent = String(due.length);
+
+    if (!reviewSession) reviewSession = { queue: [], revealed: false, done: 0, again: new Set() };
+    reviewSession.queue = reviewSession.queue.filter((id) => byId.has(id));
+    if (!reviewSession.queue.length) reviewSession.queue = due.map((card) => card.id);
+
+    if (!cards.length) {
+      setText("#review-status", "");
+      content.innerHTML = '<div class="empty-state"><h3>Az ismétlő pakli még üres</h3><p>A pakli a teljesített leckék önellenőrző kérdéseiből és a kvízben elrontott kérdésekből épül. Teljesíts egy leckét, és másnap itt várnak a kérdései.</p><button class="secondary-button" type="button" data-view-target="tananyag">Tananyag megnyitása</button></div>';
       return;
     }
-    const expectancy = (winRate / 100) * avgWin - (1 - winRate / 100) * avgLoss;
-    const classification = expectancy > 0 ? "Pozitív" : expectancy < 0 ? "Negatív" : "Semleges";
-    const breakEven = avgWin + avgLoss > 0 ? `${formatNumber((avgLoss / (avgWin + avgLoss)) * 100, 1)}%` : "–";
-    result.innerHTML = resultRowsHTML([
-      { label: "Várható érték trade-enként", value: `${expectancy > 0 ? "+" : ""}${formatNumber(expectancy, 3)}R`, className: `is-main ${expectancy > 0 ? "is-good" : expectancy < 0 ? "is-bad" : ""}` },
-      { label: "Besorolás, költségek előtt", value: classification },
-      { label: "Nullszaldós találati arány", value: breakEven },
-    ]);
+
+    if (!reviewSession.queue.length) {
+      const upcoming = cards.filter((card) => card.due > today).sort((a, b) => a.due.localeCompare(b.due));
+      const nextDay = upcoming[0]?.due;
+      const nextCount = upcoming.filter((card) => card.due === nextDay).length;
+      setText("#review-status", `A pakliban ${cards.length} kártya van.`);
+      content.innerHTML = `<div class="empty-state"><h3>${reviewSession.done ? `Mára kész: ${reviewSession.done} kártyát ismételtél át` : "Mára nincs esedékes kártya"}</h3><p>${nextDay ? `A következő ismétlés: ${shortDate(nextDay)}, ${nextCount} kártya. A tudott kártyák egyre ritkábban jönnek vissza.` : "Minden kártya a helyén van."}</p></div>`;
+      return;
+    }
+
+    const card = byId.get(reviewSession.queue[0]);
+    setText("#review-status", `Mára még ${reviewSession.queue.length} kártya van hátra. A pakliban összesen ${cards.length}.`);
+    const source = card.lesson ? `${card.fromQuiz ? "Kvízkérdés" : "Önellenőrzés"} · ${card.lesson.globalIndex}. lecke: ${card.lesson.title}` : "Kvízkérdés";
+    content.innerHTML = `<article class="review-card">
+      <p class="review-card__source">${escapeHTML(source)}</p>
+      <h2>${escapeHTML(card.front)}</h2>
+      ${reviewSession.revealed
+        ? `<div class="review-card__answer">${formatInline(card.back)}</div>
+           <div class="review-actions"><button class="secondary-button" type="button" data-review-grade="again">Nem tudtam</button><button class="primary-button" type="button" data-review-grade="good">Tudtam</button>${card.lesson ? `<button class="text-button" type="button" data-open-lesson="${card.lesson.id}">Lecke megnyitása</button>` : ""}</div>`
+        : '<div class="review-actions"><button class="primary-button" type="button" data-review-reveal>Válasz mutatása</button></div>'}
+    </article>`;
+    if (focus) content.querySelector('[data-review-reveal], [data-review-grade="good"]')?.focus();
+  }
+
+  function gradeReview(known) {
+    const id = reviewSession?.queue[0];
+    if (!id) return;
+    const today = localDateKey();
+    const secondLook = reviewSession.again.has(id);
+    reviewSession.queue.shift();
+    reviewSession.revealed = false;
+    // Az elrontott kártya még egyszer visszajön a mai körben, de az ütemezése holnapra szól.
+    if (!secondLook) {
+      const box = known ? Math.min((state.reviews[id]?.box || 0) + 1, REVIEW_INTERVALS.length - 1) : 0;
+      state.reviews[id] = { box, due: addDays(today, REVIEW_INTERVALS[box]), seen: today };
+      reviewSession.done += 1;
+      if (!known) { reviewSession.again.add(id); reviewSession.queue.push(id); }
+      recordActivity();
+      saveState("Ismétlés mentve");
+    }
+    renderReview(true);
+    renderOverview();
+  }
+
+  // ---------- Napló-statisztika ----------
+
+  function setJournalTab(tab) {
+    journalTab = tab;
+    document.querySelectorAll('[role="tab"][data-journal-tab]').forEach((button) => {
+      const active = button.dataset.journalTab === tab;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    document.querySelectorAll("[data-journal-panel]").forEach((panel) => { panel.hidden = panel.dataset.journalPanel !== tab; });
+    if (tab === "stats") renderStats();
+  }
+
+  function renderStats() {
+    const stats = CALC.journalStats(state.journalEntries.filter((entry) => statsMode === "all" || entry.mode === statsMode));
+    setText("#stats-sample", `${stats.count} kötés, ${stats.entries} bejegyzés`);
+    document.querySelector("#stats-empty").hidden = stats.count > 0;
+    document.querySelector("#stats-body").hidden = stats.count === 0;
+    if (!stats.count) return;
+
+    setText("#stats-note", stats.count < 20
+      ? `Ez még nem statisztika: ${stats.count} kötésnél a szórás nagyobb, mint a jel. Gyűjts tovább, mielőtt bármit módosítasz a szabályaidon.`
+      : stats.count < 100 ? `Az első érdemi képhez legalább 100, előre rögzített szabály szerinti kötés kell. Most ${stats.count} van.` : "");
+
+    const tone = (value) => (value > 0 ? "is-good" : value < 0 ? "is-bad" : "");
+    document.querySelector("#stats-figures").innerHTML = [
+      ["Várható érték kötésenként", signedR(stats.expectancy, 3), tone(stats.expectancy)],
+      ["Összes eredmény", signedR(stats.totalR), tone(stats.totalR)],
+      ["Találati arány", `${formatNumber(stats.winRate, 1)}%`],
+      ["Átlagos nyerő", signedR(stats.avgWin)],
+      ["Átlagos vesztes", signedR(-stats.avgLoss)],
+      ["Legnagyobb visszaesés", `${formatNumber(stats.maxDrawdown)}R`],
+      ["Leghosszabb vesztes sorozat", `${stats.maxLossStreak} kötés`],
+      ["Szabálykövetés (cél: 90%)", `${formatNumber(stats.ruleRate, 0)}%`, stats.ruleRate >= 90 ? "is-good" : "is-bad"],
+      ["Szabálytalan nyerő kötés", String(stats.ruleBreakWins)],
+      ["Kötés nélküli bejegyzés", String(stats.noTrades)],
+      ...(stats.maeCount ? [["Átlagos MAE / MFE", `${formatNumber(stats.avgMae)}R / ${formatNumber(stats.avgMfe)}R`]] : []),
+    ].map(([label, value, className = ""]) => `<div><dt>${label}</dt><dd class="${className}">${value}</dd></div>`).join("");
+
+    const container = document.querySelector("#stats-curve");
+    if (container.clientWidth > 0) {
+      const { curve } = stats;
+      const color = "var(--series-1)";
+      const step = Math.max(1, Math.ceil(curve.length / 6));
+      const ticks = [];
+      for (let index = 0; index <= curve.length; index += step) ticks.push(index);
+      if (curve.length - ticks[ticks.length - 1] > step / 2) ticks.push(curve.length); else ticks[ticks.length - 1] = curve.length;
+      CHARTS.lineChart(container, {
+        count: curve.length + 1,
+        series: [{ label: "Halmozott eredmény", color, values: [0, ...curve.map((point) => point.cumulative)], endLabel: signedR(stats.totalR) }],
+        xTicks: [...new Set(ticks)].map((index) => ({ x: index, label: index ? `${index}.` : "0" })),
+        baseline: 0,
+        formatY: (value) => `${formatNumber(value, 1)}R`,
+        ariaLabel: `Halmozott eredmény ${curve.length} kötés után: ${signedR(stats.totalR)}. A nyílbillentyűkkel léptethető.`,
+        tooltip: (index) => {
+          if (index === 0) return { title: "Kezdés", rows: [{ color, value: "0R", label: "Halmozott" }] };
+          const point = curve[index - 1];
+          return { title: `${point.index}. kötés · ${point.symbol} · ${formatDate(point.date)}`, rows: [{ color, value: signedR(point.cumulative), label: "Halmozott" }, { value: signedR(point.result), label: "Ez a kötés" }] };
+        },
+      });
+    }
+
+    const breakdown = (title, groups, labelOf) => `<section><h3>${title}</h3><div class="table-wrap"><table>
+      <thead><tr><th scope="col">Csoport</th><th scope="col" class="num">Kötés</th><th scope="col" class="num">Találati arány</th><th scope="col" class="num">Átlag</th><th scope="col" class="num">Összesen</th></tr></thead>
+      <tbody>${groups.map((group) => `<tr><td>${escapeHTML(labelOf(group.key))}</td><td class="num">${group.count}</td><td class="num">${formatNumber(group.winRate, 0)}%</td><td class="num">${signedR(group.expectancy)}</td><td class="num">${signedR(group.totalR)}</td></tr>`).join("")}</tbody>
+    </table></div></section>`;
+    const capitalize = (text) => text.charAt(0).toLocaleUpperCase("hu-HU") + text.slice(1);
+    document.querySelector("#stats-tables").innerHTML = breakdown("Setup szerint", stats.bySetup, (key) => key)
+      + breakdown("Szabálykövetés szerint", stats.byRule, (key) => ({ igen: "Szabályos", reszben: "Részben szabályos", nem: "Szabálytalan" })[key] || key)
+      + breakdown("Érzelmi állapot szerint", stats.byEmotion, (key) => capitalize(emotionLabel(key)));
   }
 
   function addJournalEntry(input) {
@@ -616,6 +902,11 @@
       emotion: input.emotion || "nyugodt",
       ruleFollowed: input.ruleFollowed || "igen",
       lesson: String(input.lesson || "").trim().slice(0, 600),
+      observation: String(input.observation || "").trim().slice(0, 600),
+      hypothesis: String(input.hypothesis || "").trim().slice(0, 200),
+      invalidation: String(input.invalidation || "").trim().slice(0, 200),
+      mae: input.mae ?? "",
+      mfe: input.mfe ?? "",
       createdAt: new Date().toISOString(),
     };
     if (!entry.symbol || !entry.setup || !entry.lesson) throw new Error("Az instrumentum, setup és tanulság kötelező.");
@@ -668,6 +959,7 @@
     const hash = lesson ? `#lecke/${lesson.id}` : `#${view}`;
     if (updateHash && location.hash !== hash) history.pushState(null, "", hash);
     window.scrollTo(0, 0);
+    if (view === "naplo" && journalTab === "stats") renderStats();
   }
 
   function positionNavIndicator() {
@@ -697,12 +989,14 @@
       panel.hidden = !active;
       panel.classList.toggle("active", active);
     });
+    if (tab === "review") renderReview();
   }
 
   function openSettings() {
     const form = document.querySelector("#settings-form");
     form.elements.experience.value = state.profile.experience;
     form.elements.dailyGoal.value = String(state.profile.dailyGoal);
+    form.elements.startDate.value = state.profile.startDate;
     form.elements.theme.value = ["light", "dark"].includes(state.settings.theme) ? state.settings.theme : "system";
     form.elements.reducedMotion.checked = Boolean(state.settings.reducedMotion);
     document.querySelector("#settings-dialog").showModal();
@@ -849,6 +1143,25 @@
     const tabButton = event.target.closest("[data-practice-tab]");
     if (tabButton) setPracticeTab(tabButton.dataset.practiceTab);
 
+    const practiceOpen = event.target.closest("[data-practice-open]");
+    if (practiceOpen) setPracticeTab(practiceOpen.dataset.practiceOpen);
+
+    const journalButton = event.target.closest("[data-journal-tab]");
+    if (journalButton) setJournalTab(journalButton.dataset.journalTab);
+
+    const statsButton = event.target.closest("[data-stats-mode]");
+    if (statsButton) {
+      statsMode = statsButton.dataset.statsMode;
+      document.querySelectorAll("[data-stats-mode]").forEach((button) => button.classList.toggle("active", button === statsButton));
+      renderStats();
+    }
+
+    if (event.target.closest("[data-review-reveal]") && reviewSession) { reviewSession.revealed = true; renderReview(true); }
+    const gradeButton = event.target.closest("[data-review-grade]");
+    if (gradeButton) gradeReview(gradeButton.dataset.reviewGrade === "good");
+
+    if (event.target.closest("#journal-more")) { journalLimit += 20; renderJournal(); }
+
     const entryDelete = event.target.closest("[data-delete-entry]");
     if (entryDelete && confirm("Biztosan törlöd ezt a naplóbejegyzést?")) {
       state.journalEntries = state.journalEntries.filter((entry) => entry.id !== entryDelete.dataset.deleteEntry);
@@ -886,15 +1199,10 @@
     const input = formObject(event.currentTarget);
     state.profile.experience = input.experience;
     state.profile.dailyGoal = Number(input.dailyGoal) || 30;
+    if (input.startDate) state.profile.startDate = input.startDate;
     state.settings.theme = input.theme;
     state.settings.reducedMotion = event.currentTarget.elements.reducedMotion.checked;
-    saveState("Beállítások mentve"); applySettings(); renderOverview(); document.querySelector("#settings-dialog").close(); showToast("A beállítások frissültek.");
-  });
-
-  [["#position-form", renderPositionResult], ["#expectancy-form", renderExpectancyResult]].forEach(([selector, render]) => {
-    const form = document.querySelector(selector);
-    form?.addEventListener("input", render);
-    form?.addEventListener("submit", (event) => { event.preventDefault(); render(); });
+    saveState("Beállítások mentve"); renderAll(); document.querySelector("#settings-dialog").close(); showToast("A beállítások frissültek.");
   });
 
   document.querySelectorAll("[data-order-answer]").forEach((button) => button.addEventListener("click", () => {
@@ -937,7 +1245,8 @@
       const parsed = JSON.parse(await file.text());
       if (!parsed || typeof parsed !== "object" || !parsed.profile || !parsed.progress) throw new Error("A fájl nem érvényes TradeCraft mentés.");
       if (!confirm("Az import felülírja a jelenlegi helyi adatokat. Folytatod?")) return;
-      state = { ...createDefaultState(), ...parsed, profile: { ...createDefaultState().profile, ...(parsed.profile || {}) }, settings: { ...createDefaultState().settings, ...(parsed.settings || {}) } };
+      state = normalizeState(parsed);
+      reviewSession = null;
       saveState("Import kész"); renderAll(); if (currentView === "lecke") showView("tananyag"); document.querySelector("#settings-dialog").close(); showToast("Az adatok importálva.");
     } catch (error) { showToast(error.message || "Az import sikertelen.", true); }
     finally { event.target.value = ""; }
@@ -946,6 +1255,7 @@
   document.querySelector("#reset-data")?.addEventListener("click", () => {
     if (!confirm("Ez törli a helyi haladást, jegyzeteket, kvízeket és naplót. Exportált mentés nélkül nem vonható vissza. Biztosan folytatod?")) return;
     pendingNote = null;
+    reviewSession = null;
     state = createDefaultState();
     saveState("Adatok törölve"); renderAll(); startQuiz(); if (currentView === "lecke") showView("tananyag"); document.querySelector("#settings-dialog").close(); showToast("A helyi adatok törölve.");
   });
@@ -960,9 +1270,14 @@
   document.querySelector("#journal-form").elements.tradedAt.value = localDateKey();
   renderAll();
   renderQuiz();
-  renderPositionResult();
-  renderExpectancyResult();
   route(false);
+  ["pointerdown", "keydown", "scroll"].forEach((type) => window.addEventListener(type, () => { lastInteraction = Date.now(); }, { passive: true }));
+  window.setInterval(tickStudyTime, STUDY_TICK_SECONDS * 1000);
+  let statsResizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(statsResizeTimer);
+    statsResizeTimer = setTimeout(() => { if (currentView === "naplo" && journalTab === "stats") renderStats(); }, 150);
+  });
   registerWebMCP();
   if (storageRecovered) showToast("A korábbi helyi adat nem volt olvasható, ezért biztonságos alapállapotot töltöttünk be.", true);
 })();

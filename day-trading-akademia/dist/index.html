@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f9f8f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14161d" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Interaktív magyar day trading tanulóplatform 6 hónapos roadmapdel, kvízekkel, kalkulátorokkal és naplóval." />
+    <title>TradeCraft Akadémia</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%233348c2'/%3E%3Cpath d='M20 44V32m12 12V20m12 24V28' stroke='%23f9f8f5' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <script>
+      try {
+        var key = new URLSearchParams(location.search).has("qa") ? "tradecraft-academy-qa-v1" : "tradecraft-academy-v1";
+        var theme = (JSON.parse(localStorage.getItem(key) || "{}").settings || {}).theme;
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+      } catch (error) {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Ugrás a tartalomhoz</a>
+
+    <div class="app-shell">
+      <header class="navbar">
+        <button class="brand" type="button" data-view-target="attekintes" aria-label="TradeCraft Akadémia, áttekintés">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">TradeCraft</span>
+        </button>
+        <nav class="main-nav" aria-label="Fő navigáció">
+          <span class="nav-indicator" aria-hidden="true"></span>
+          <button class="nav-item active" type="button" data-view-target="attekintes" aria-current="page">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1z"/></svg>
+            <span class="nav-label">Áttekintés</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="roadmap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 5h11l-2.2 3.5L17 12H6"/></svg>
+            <span class="nav-label">Roadmap</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="tananyag">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h10a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h10"/></svg>
+            <span class="nav-label">Tananyag</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="gyakorlas">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="nav-label">Gyakorlás</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="naplo">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/></svg>
+            <span class="nav-label">Napló</span>
+          </button>
+        </nav>
+        <div class="navbar-tools">
+          <div class="nav-progress" aria-label="Teljes tanulási haladás">
+            <span id="sidebar-progress-copy">0 lecke</span>
+            <div class="meter"><span id="sidebar-progress-bar"></span></div>
+          </div>
+          <button class="icon-button icon-button--glass" type="button" data-open-settings aria-label="Beállítások megnyitása" title="Beállítások">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main id="main-content" class="main-content" tabindex="-1">
+        <header class="topbar">
+          <div class="topbar-title">
+            <p class="kicker" id="page-eyebrow"></p>
+            <h1 id="page-title">Áttekintés</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="save-state" id="save-state" role="status"><span aria-hidden="true"></span> Helyben mentve</span>
+            <button class="icon-button topbar-settings" type="button" data-open-settings aria-label="Beállítások megnyitása" title="Beállítások">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <section class="app-view active" id="view-attekintes" data-view="attekintes" aria-labelledby="page-title">
+          <div class="overview">
+            <div class="overview-main">
+              <article class="next-lesson" aria-labelledby="focus-title">
+                <p class="next-lesson__label" id="focus-module">Következő lecke</p>
+                <h2 id="focus-title">Piaci alapmechanika</h2>
+                <p class="next-lesson__summary" id="focus-description"></p>
+                <div class="next-lesson__footer">
+                  <button class="hero-button" id="continue-button" type="button">Tanulás folytatása</button>
+                  <p class="next-lesson__meta" id="focus-meta" aria-label="Következő lecke adatai"></p>
+                </div>
+              </article>
+
+              <section class="block" aria-labelledby="daily-title">
+                <div class="block-head">
+                  <h2 id="daily-title">Mai menet</h2>
+                  <span class="block-head__aside">Napi cél: <strong id="daily-goal-chip">30 perc</strong></span>
+                </div>
+                <ol class="steps" id="daily-steps"></ol>
+              </section>
+
+              <section class="block" aria-labelledby="overview-roadmap-title">
+                <div class="block-head">
+                  <h2 id="overview-roadmap-title">A hat hónap</h2>
+                  <button class="text-button" type="button" data-view-target="roadmap">Teljes terv</button>
+                </div>
+                <ol class="tracks" id="overview-roadmap"></ol>
+              </section>
+            </div>
+
+            <aside class="overview-rail" aria-label="Állapot és emlékeztetők">
+              <section class="rail-block" aria-labelledby="status-title">
+                <h2 id="status-title">Állapot</h2>
+                <dl class="stat-list">
+                  <div><dt>Teljesített lecke</dt><dd id="overall-count">0 / 24</dd></div>
+                  <div><dt>Aktív nap egymás után</dt><dd id="stat-streak">0</dd></div>
+                  <div><dt>Legjobb kvízeredmény</dt><dd id="stat-quiz">–</dd></div>
+                  <div><dt>Naplóbejegyzés</dt><dd id="stat-journal">0</dd></div>
+                  <div><dt>Megbeszélendő kérdés</dt><dd id="stat-questions">0</dd></div>
+                </dl>
+              </section>
+
+              <section class="rail-block principle" aria-labelledby="principle-title">
+                <p class="rail-label">A jegyzetedből</p>
+                <h2 id="principle-title">Ne a deltát kérdezd. A reakciót kérdezd.</h2>
+                <p>Az orderflow nem önálló belépési jel. A helyszín, a végrehajtott aktivitás és az utána következő árreakció együtt ad értelmezhető bizonyítékot.</p>
+                <button class="text-button" type="button" data-open-lesson="delta-cvd">Orderflow lecke megnyitása</button>
+              </section>
+
+              <aside class="notice" aria-label="Friss szabályozási figyelmeztetés">
+                <p class="notice__label">Időérzékeny · ellenőrizve: 2026. október 7.</p>
+                <h2>Az amerikai intraday margin/PDT átmenet brókerenként eltérhet.</h2>
+                <p>A FINRA új rendszere már hatályos, de a cégek 2027. október 20-ig átmeneti időszakot kaptak. Mindig a konkrét brókernél, instrumentumnál és számlatípusnál ellenőrizd az aktuális követelményt.</p>
+                <a href="https://www.finra.org/investors/insights/intraday-margin-requirements" target="_blank" rel="noreferrer">Hivatalos FINRA összefoglaló <span aria-hidden="true">↗</span></a>
+              </aside>
+            </aside>
+          </div>
+        </section>
+
+        <section class="app-view" id="view-roadmap" data-view="roadmap" aria-labelledby="page-title" hidden>
+          <p class="view-lead">A sorrend ajánlott, de minden modul szabadon megnyitható. A pipa a leckét jelenti, nem a biztos kereskedési tudást.</p>
+          <div class="toolbar">
+            <div class="segmented" role="group" aria-label="Roadmap szűrő">
+              <button class="filter-chip active" type="button" data-roadmap-filter="all">Mind</button>
+              <button class="filter-chip" type="button" data-roadmap-filter="active">Aktív</button>
+              <button class="filter-chip" type="button" data-roadmap-filter="completed">Kész</button>
+              <button class="filter-chip" type="button" data-roadmap-filter="remaining">Hátralévő</button>
+            </div>
+            <p class="toolbar__aside"><strong id="roadmap-summary-percent">0%</strong> teljesítve</p>
+          </div>
+          <div class="module-list" id="roadmap-stack"></div>
+        </section>
+
+        <section class="app-view" id="view-tananyag" data-view="tananyag" aria-labelledby="page-title" hidden>
+          <p class="view-lead">A piaci alapoktól az orderflow-n át a Go/No-Go döntésig. Minden leckéhez saját jegyzetet írhatsz, és jelölheted, ha kész.</p>
+          <div class="tab-list" role="tablist" aria-label="Tananyag részei">
+            <button class="practice-tab active" type="button" role="tab" aria-selected="true" aria-controls="library-lessons" data-library-tab="lessons">Leckék</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="library-glossary" data-library-tab="glossary">Fogalomtár</button>
+          </div>
+          <div id="library-lessons" data-library-panel="lessons" role="tabpanel">
+          <div class="library-toolbar">
+            <label class="search-field"><span class="sr-only">Keresés a leckékben</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="lesson-search" type="search" placeholder="Keresés: delta, kockázat, backtest…" /></label>
+            <label class="select-field"><span class="sr-only">Modul szűrése</span><select id="lesson-module-filter"><option value="all">Minden modul</option></select></label>
+            <label class="select-field"><span class="sr-only">Állapot szűrése</span><select id="lesson-status-filter"><option value="all">Minden állapot</option><option value="completed">Kész</option><option value="remaining">Hátralévő</option></select></label>
+          </div>
+          <div class="lesson-groups" id="lesson-grid"></div>
+          <div class="empty-state" id="lesson-empty" hidden><h3>Nincs találat</h3><p>Próbálj másik kifejezést, vagy töröld a szűrőket.</p><button class="secondary-button" id="clear-lesson-filters" type="button">Szűrők törlése</button></div>
+
+          <section class="block sources" aria-labelledby="sources-title">
+            <div class="block-head">
+              <h2 id="sources-title">Hivatalos források</h2>
+              <span class="block-head__aside">Ellenőrizve: 2026. október 7.</span>
+            </div>
+            <div class="source-list" id="source-grid"></div>
+            <p class="fine-print">A szabályok, díjak és termékfeltételek változhatnak. A platform oktatási célú, nem befektetési tanácsadás.</p>
+          </section>
+          </div>
+          <div id="library-glossary" data-library-panel="glossary" role="tabpanel" hidden>
+            <label class="search-field glossary-search"><span class="sr-only">Keresés a fogalomtárban</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="glossary-search" type="search" placeholder="Keresés: delta, POC, slippage…" /></label>
+            <p class="glossary-count" id="glossary-count"></p>
+            <dl class="glossary" id="glossary-list"></dl>
+            <div class="empty-state" id="glossary-empty" hidden><h3>Nincs ilyen fogalom</h3><p>Próbáld az angol kifejezéssel vagy egy rövidebb szótővel.</p></div>
+          </div>
+        </section>
+
+        <section class="app-view" id="view-lecke" data-view="lecke" aria-labelledby="page-title" hidden>
+          <button class="back-link" id="lesson-back" type="button"><span aria-hidden="true">←</span> <span id="lesson-back-label">Tananyag</span></button>
+          <div class="lesson-layout">
+            <article class="lesson-article">
+              <div id="lesson-content"></div>
+              <nav class="lesson-pager" aria-label="Leckék közötti lépés">
+                <button class="lesson-pager__link" id="lesson-prev" type="button"><small>Előző</small><span></span></button>
+                <button class="lesson-pager__link lesson-pager__link--next" id="lesson-next" type="button"><small>Következő</small><span></span></button>
+              </nav>
+            </article>
+            <aside class="lesson-side" aria-label="Jegyzet és állapot">
+              <label for="lesson-note">Saját jegyzet</label>
+              <textarea id="lesson-note" rows="8" maxlength="1200" placeholder="Írd le a saját szavaiddal a lényeget…"></textarea>
+              <span class="autosave-copy" id="lesson-note-status">A jegyzet automatikusan mentődik.</span>
+              <button class="primary-button" id="toggle-lesson-complete" type="button">Lecke teljesítése</button>
+            </aside>
+          </div>
+        </section>
+
+        <section class="app-view" id="view-gyakorlas" data-view="gyakorlas" aria-labelledby="page-title" hidden>
+          <p class="view-lead">Ne csak olvasd: válaszolj, számolj, majd ellenőrizd a gondolatmenetedet.</p>
+          <div class="tab-list" role="tablist" aria-label="Gyakorlóeszközök">
+            <button class="practice-tab active" type="button" role="tab" aria-selected="true" aria-controls="quiz-panel" data-practice-tab="quiz">Tudáspróba</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="risk-panel" data-practice-tab="risk">Kockázati labor</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="order-panel" data-practice-tab="order">Megbízás-labor</button>
+          </div>
+
+          <section class="practice-panel active" id="quiz-panel" data-practice-panel="quiz" role="tabpanel">
+            <div class="quiz">
+              <div class="quiz-topline"><span id="quiz-counter"></span><div class="meter"><span id="quiz-progress-bar"></span></div><span id="quiz-score">0 pont</span></div>
+              <div id="quiz-content"></div>
+            </div>
+          </section>
+
+          <section class="practice-panel" id="risk-panel" data-practice-panel="risk" role="tabpanel" hidden>
+            <div class="tool-grid">
+              <form class="tool" id="position-form" novalidate>
+                <h2>Pozícióméretező</h2>
+                <p>Előbb a kockázat, utána a méret. Az egységenkénti értéket a választott instrumentum specifikációja szerint add meg.</p>
+                <div class="form-grid two">
+                  <label>Számlaérték<input name="account" type="number" min="0" step="0.01" value="10000" inputmode="decimal" /></label>
+                  <label>Kockázat (%)<input name="riskPercent" type="number" min="0.01" max="100" step="0.01" value="0.5" inputmode="decimal" /></label>
+                  <label>Belépőár<input name="entry" type="number" step="any" value="5100" inputmode="decimal" /></label>
+                  <label>Stopár<input name="stop" type="number" step="any" value="5095" inputmode="decimal" /></label>
+                  <label class="full">1 egység értéke árpontonként<input name="unitValue" type="number" min="0.000001" step="any" value="5" inputmode="decimal" /></label>
+                </div>
+                <div class="tool-result" id="position-result" role="status" aria-live="polite"></div>
+              </form>
+              <form class="tool" id="expectancy-form" novalidate>
+                <h2>Várható érték</h2>
+                <p>A találati arány önmagában kevés. Az expectancy megmutatja a rendszer átlagos R-eredményét trade-enként.</p>
+                <div class="form-grid">
+                  <label>Találati arány (%)<input name="winRate" type="number" min="0" max="100" step="0.1" value="45" inputmode="decimal" /></label>
+                  <label>Átlagos nyerő (R)<input name="avgWin" type="number" min="0" step="0.01" value="1.8" inputmode="decimal" /></label>
+                  <label>Átlagos veszteség (R)<input name="avgLoss" type="number" min="0" step="0.01" value="1" inputmode="decimal" /></label>
+                </div>
+                <div class="tool-result" id="expectancy-result" role="status" aria-live="polite"></div>
+              </form>
+            </div>
+            <p class="fine-print">A kalkulátor tanulási és szimulációs célú. A kontraktusértéket, költségeket, slippage-et és brókerszabályokat külön ellenőrizd.</p>
+          </section>
+
+          <section class="practice-panel" id="order-panel" data-practice-panel="order" role="tabpanel" hidden>
+            <div class="order-lab">
+              <div class="order-lab__task">
+                <h2>Melyik megbízás illik a célhoz?</h2>
+                <p id="order-scenario">Azonnal venni szeretnél. A best bid 5102,00, a best ask 5102,25. Az ár fontosabb, vagy a végrehajtás?</p>
+                <div class="order-choices" id="order-choices">
+                  <button type="button" data-order-answer="market"><strong>Market buy</strong><span>Azonnali végrehajtást keres</span></button>
+                  <button type="button" data-order-answer="limit"><strong>Limit buy 5102,00</strong><span>Árkontrollt keres</span></button>
+                  <button type="button" data-order-answer="stop"><strong>Buy stop 5103,00</strong><span>Csak egy magasabb trigger után aktiválódik</span></button>
+                </div>
+                <div class="order-feedback" id="order-feedback" role="status" aria-live="polite">Válassz egy megbízást, majd olvasd el a kompromisszumot.</div>
+              </div>
+              <div class="order-book" aria-label="Egyszerűsített ajánlati könyv">
+                <div class="order-book__head"><span>Oldal</span><span>Ár</span><span>Méret</span></div>
+                <div class="ask"><span>Eladó</span><strong>5102,50</strong><b>14</b></div>
+                <div class="ask best"><span>Best ask</span><strong>5102,25</strong><b>7</b></div>
+                <div class="spread-row"><span>Spread</span><strong>0,25</strong><b></b></div>
+                <div class="bid best"><span>Best bid</span><strong>5102,00</strong><b>11</b></div>
+                <div class="bid"><span>Vevő</span><strong>5101,75</strong><b>18</b></div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="app-view" id="view-naplo" data-view="naplo" aria-labelledby="page-title" hidden>
+          <div class="view-lead-row">
+            <p class="view-lead">Rögzítsd a szimulált helyzetet, a szabálykövetést és a tanulságot. A napló ezen a böngészőn marad.</p>
+            <button class="secondary-button" id="export-from-journal" type="button">Adatok exportálása</button>
+          </div>
+          <div class="journal-layout">
+            <form class="journal-form" id="journal-form">
+              <h2>Új bejegyzés</h2>
+              <div class="form-grid two">
+                <label>Mód<select name="mode"><option value="paper">Szimulált / paper</option><option value="replay">Replay</option><option value="live">Valós, különösen óvatosan</option></select></label>
+                <label>Dátum<input name="tradedAt" type="date" required /></label>
+                <label>Instrumentum<input name="symbol" type="text" maxlength="24" placeholder="pl. MES" required /></label>
+                <label>Irány<select name="direction"><option value="long">Long</option><option value="short">Short</option><option value="no-trade">No trade</option></select></label>
+                <label class="full">Setup<input name="setup" type="text" maxlength="80" placeholder="pl. VAL visszafoglalás + abszorpció" required /></label>
+                <label>Belépő<input name="entry" type="number" step="any" inputmode="decimal" /></label>
+                <label>Stop<input name="stop" type="number" step="any" inputmode="decimal" /></label>
+                <label>Célár<input name="target" type="number" step="any" inputmode="decimal" /></label>
+                <label>Eredmény (R)<input name="resultR" type="number" step="0.01" inputmode="decimal" /></label>
+                <label>Érzelmi állapot<select name="emotion"><option value="nyugodt">Nyugodt</option><option value="bizonytalan">Bizonytalan</option><option value="kapkodo">Kapkodó</option><option value="frusztralt">Frusztrált</option><option value="tulbiztos">Túl magabiztos</option></select></label>
+                <label>Szabálykövetés<select name="ruleFollowed"><option value="igen">Igen</option><option value="reszben">Részben</option><option value="nem">Nem</option></select></label>
+                <label class="full">Tanulság<textarea name="lesson" rows="4" maxlength="600" placeholder="Tény → döntés → mi erősítette vagy cáfolta?" required></textarea></label>
+              </div>
+              <button class="primary-button" type="submit">Bejegyzés mentése</button>
+            </form>
+
+            <section class="journal-history" aria-labelledby="journal-list-title">
+              <div class="block-head">
+                <h2 id="journal-list-title">Előzmények</h2>
+                <span class="block-head__aside" id="journal-count">0 db</span>
+              </div>
+              <div class="journal-list" id="journal-list"></div>
+              <div class="empty-state" id="journal-empty"><h3>Még nincs bejegyzés</h3><p>Kezdj egy szimulált vagy replay helyzettel: egy mondatnyi tanulság is számít.</p></div>
+            </section>
+          </div>
+
+          <section class="block questions" aria-labelledby="questions-title">
+            <div class="block-head">
+              <h2 id="questions-title">Megbeszélendő kérdések</h2>
+              <button class="text-button" id="copy-questions" type="button">Lista másolása</button>
+            </div>
+            <p class="block-lead">Gyűjtsd ide, amit később együtt szeretnél kibontani.</p>
+            <form class="question-form" id="question-form">
+              <label class="sr-only" for="question-input">Új kérdés</label>
+              <input id="question-input" name="question" maxlength="240" placeholder="pl. Miért nem erősíti mindig az árat a pozitív delta?" required />
+              <button class="primary-button" type="submit">Hozzáadás</button>
+            </form>
+            <ul class="question-list" id="question-list"></ul>
+            <p class="empty-inline" id="question-empty">Még nincs félretett kérdésed.</p>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="modal settings-modal" id="settings-dialog" aria-labelledby="settings-title">
+      <div class="modal-head">
+        <h2 id="settings-title">Beállítások</h2>
+        <button class="icon-button" type="button" data-close-dialog="settings-dialog" aria-label="Beállítások bezárása"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
+      <form id="settings-form" class="settings-form">
+        <label>Tapasztalati szint<select name="experience"><option value="kezdo">Kezdő</option><option value="alapok">Ismerem az alapokat</option><option value="gyakorlo">Már gyakorlok</option></select></label>
+        <label>Napi tanulási cél<select name="dailyGoal"><option value="15">15 perc</option><option value="30">30 perc</option><option value="45">45 perc</option><option value="60">60 perc</option></select></label>
+        <label>Megjelenés<select name="theme"><option value="system">Rendszer szerint</option><option value="light">Világos</option><option value="dark">Sötét</option></select></label>
+        <label class="toggle-row"><span><strong>Csökkentett mozgás</strong><small>Minimalizálja az animációkat.</small></span><input name="reducedMotion" type="checkbox" /></label>
+        <button class="primary-button" type="submit">Beállítások mentése</button>
+      </form>
+      <div class="data-actions">
+        <h3>Saját adatmentés</h3>
+        <p>A haladás, a jegyzetek és a napló jelenleg csak ezen a böngészőn tárolódik.</p>
+        <div class="button-row">
+          <button class="secondary-button" id="export-data" type="button">JSON export</button>
+          <label class="secondary-button file-button">JSON import<input id="import-data" type="file" accept="application/json,.json" /></label>
+          <button class="danger-button" id="reset-data" type="button">Minden adat törlése</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script src="./data.js" defer></script>
+    <script src="./content/01-alapmechanika.js" defer></script><script src="./content/02-kontextus.js" defer></script><script src="./content/03-kockazat.js" defer></script>
+    <script src="./content/04-strategia.js" defer></script><script src="./content/05-pszichologia.js" defer></script><script src="./content/06-diligence.js" defer></script>
+    <script src="./content/fogalomtar.js" defer></script>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

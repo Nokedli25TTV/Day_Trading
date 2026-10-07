@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "akademia",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".claude/static-server.mjs"],
+      "port": 4317,
+      "autoPort": true
+    }
+  ]
+}

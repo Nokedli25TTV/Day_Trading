@@ -1,0 +1,7 @@
+# Helyi, gépfüggő beállítások
+.claude/settings.local.json
+
+# Operációs rendszer és szerkesztő
+Thumbs.db
+.DS_Store
+.vscode/

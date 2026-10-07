@@ -612,6 +612,30 @@
     <div class="term-popover" id="term-popover" popover></div>
 
     <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
-    <script type="module" src="./js/main.js"></script>
+    <div class="boot-error" id="boot-error" role="alert" hidden>
+      <h2>Az oldal nem indult el</h2>
+      <p id="boot-error-text"></p>
+      <p id="boot-error-detail"></p>
+    </div>
+    <script>
+      // Ha a modulok nem töltődnek be, az oldal ne maradjon szó nélkül üres.
+      (function () {
+        var detail = "";
+        function show() {
+          if (window.tradecraftReady) return;
+          var asFile = location.protocol === "file:";
+          document.getElementById("boot-error-text").textContent = asFile
+            ? "Fájlként nyitottad meg, így a böngésző nem tölti be a programot. Indítsd a projekt mappájában az Inditas.bat fájllal, vagy nyisd meg a http://127.0.0.1:4173 címet, ha a szerver már fut."
+            : "A program nem töltődött be. Frissítsd az oldalt (Ctrl+F5). Ha nem segít, az alábbi hibaüzenet megmutatja az okát.";
+          document.getElementById("boot-error-detail").textContent = detail;
+          document.getElementById("boot-error").hidden = false;
+        }
+        window.addEventListener("error", function (event) { detail = event.message || detail; if (document.readyState === "complete") show(); });
+        window.addEventListener("unhandledrejection", function (event) { detail = String((event.reason && event.reason.message) || event.reason || detail); });
+        window.addEventListener("load", function () { setTimeout(show, 2500); });
+        window.tradecraftBootFailed = show;
+      })();
+    </script>
+    <script type="module" src="./js/main.js" onerror="window.tradecraftBootFailed()"></script>
   </body>
 </html>

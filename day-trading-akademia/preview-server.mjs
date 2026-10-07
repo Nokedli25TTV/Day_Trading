@@ -44,6 +44,12 @@ const server = createServer(async (request, response) => {
   }
 });
 
+server.on("error", (error) => {
+  if (error.code !== "EADDRINUSE") throw error;
+  console.log(`A szerver már fut: http://127.0.0.1:${port}`);
+  process.exit(0);
+});
+
 server.listen(port, "127.0.0.1", () => {
   console.log(`Local: http://127.0.0.1:${port}`);
 });

@@ -33,6 +33,9 @@ initRouter();
 refresh();
 route(false);
 
+// Innentől az index.html indulási figyelője tudja, hogy az alkalmazás elindult.
+window.tradecraftReady = true;
+
 initBackup();
 initPWA();
 initWebMCP();

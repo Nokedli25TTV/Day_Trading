@@ -17,6 +17,10 @@ Ha egy fájl 250 sor fölé nő, bontsd szét, mielőtt továbbírod.
 
 Nincs build lépés és nincs függőség: a `day-trading-akademia/dist` mappa maga az oldal.
 A kód ES modulokból áll, ezért webszerverről kell megnyitni (fájlként megnyitva nem indul el).
+A felhasználó a gyökérben lévő `Inditas.bat` fájllal indítja: ez elindítja a `preview-server.mjs`-t
+(`http://127.0.0.1:4173`) és megnyitja a böngészőt. Ha az alkalmazás nem indul el, az `index.html`
+alján lévő figyelő látható hibaüzenetet tesz ki (`#boot-error`); a `main.js` a `window.tradecraftReady`
+jelzővel szól, hogy elindult.
 
 ```bash
 node .claude/static-server.mjs                 # előnézet (a .claude/launch.json "akademia" konfigja ezt indítja)

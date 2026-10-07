@@ -1,0 +1,64 @@
+/* ---------- Napló ---------- */
+
+.journal-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr); gap: 3rem; align-items: start; }
+.journal-form { padding: 1.5rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.journal-form h2 { margin-bottom: 1.1rem; }
+.journal-form .primary-button { margin-top: 1.25rem; }
+.journal-history .block-head { padding-bottom: 0.6rem; margin-bottom: 0; border-bottom: 1px solid var(--line); }
+.journal-history .empty-state { margin-top: 1rem; }
+
+.journal-entry { padding: 1rem 0; border-bottom: 1px solid var(--line); }
+.journal-entry__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.journal-entry__top strong { font-weight: 650; }
+.journal-entry__top small { display: block; color: var(--text-3); font-size: 0.875rem; }
+.journal-entry__badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.6rem 0; }
+.journal-entry__badges span { padding: 0.1rem 0.5rem; border-radius: 5px; background: var(--sunken); color: var(--text-2); font-size: 0.8125rem; }
+.journal-entry__badges .is-good { background: var(--good-soft); color: var(--good); font-weight: 600; }
+.journal-entry__badges .is-bad { background: var(--bad-soft); color: var(--bad); font-weight: 600; }
+.journal-entry p { color: var(--text-2); font-size: 0.9375rem; line-height: 1.55; }
+
+.delete-entry,
+.delete-question {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .delete-entry:hover, .delete-question:hover { background: var(--bad-soft); color: var(--bad); }
+}
+
+.questions { padding-top: 2rem; border-top: 1px solid var(--line); }
+.question-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.6rem; max-width: 46rem; margin-top: 1rem; }
+.question-list { max-width: 46rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.question-list li { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line); }
+.question-list li > span:first-child { color: var(--text-3); font-size: 0.875rem; font-weight: 600; }
+
+/* ---------- Napló-statisztika ---------- */
+
+.stats-note { max-width: 68ch; margin: 0.9rem 0 0.5rem; padding: 0.7rem 0.95rem; border: 1px solid var(--warn-line); border-radius: var(--radius); background: var(--warn-soft); font-size: 0.9375rem; line-height: 1.5; }
+.stats-note:empty { display: none; }
+.figure-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 2.5rem; margin: 0.75rem 0 0; }
+.figure-grid > div { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.65rem 0; border-bottom: 1px solid var(--line); }
+.figure-grid dt { color: var(--text-2); font-size: 0.9375rem; }
+.figure-grid dd { margin: 0; font-size: 1.0625rem; font-weight: 650; white-space: nowrap; }
+.figure-grid dd.is-good { color: var(--good); }
+.figure-grid dd.is-bad { color: var(--bad); }
+.stats-tables { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 2.5rem; }
+.stats-tables h3 { margin-bottom: 0.5rem; font-size: 0.9375rem; }
+.stats-tables section:first-child { grid-column: 1 / -1; }
+
+.form-more { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.form-more summary { padding: 0.7rem 0; border-radius: var(--radius-sm); color: var(--accent); font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+.form-more .form-grid { padding: 0.25rem 0 1rem; }
+.journal-more { margin-top: 1rem; }
+.journal-entry__detail { margin-top: 0.3rem; }
+.journal-entry__detail strong { color: var(--text); font-weight: 600; }

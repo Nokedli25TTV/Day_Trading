@@ -1,15 +1,9 @@
 // A számolófüggvények ellenőrzése a leckék kidolgozott példáival.
-// Futtatás: node day-trading-akademia/tests/calc.test.mjs
+import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import * as calc from "../dist/js/logic/calc.js";
 
-const window = {};
-new Function("window", readFileSync(fileURLToPath(new URL("../dist/calc.js", import.meta.url)), "utf8"))(window);
-const calc = window.TRADECRAFT_CALC;
 const near = (actual, expected, tolerance = 1e-6) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
-let passed = 0;
-const test = (name, run) => { run(); passed += 1; console.log(`ok  ${name}`); };
 
 test("pozícióméret: MES, 8 tickes stop, 25 USD keret (Pozícióméretezés lecke)", () => {
   const result = calc.positionSize({ account: 5000, riskPercent: 0.5, entry: 5100, stop: 5098, unitValue: 5, costPerUnit: 3.25 });
@@ -124,4 +118,3 @@ test("napló-statisztika: R-ek, sorozat, szabálykövetés", () => {
   assert.equal(stats.curve.at(-1).index, 4);
 });
 
-console.log(`\n${passed} teszt rendben.`);

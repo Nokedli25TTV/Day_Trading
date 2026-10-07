@@ -1,5 +1,5 @@
 // 04 · Stratégia és orderflow: a leckék részletes törzsanyaga.
-window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
+export default {
   "setup-trigger": {
     sections: [
       {
@@ -221,6 +221,8 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
     sections: [
       {
         title: "A gyertya belseje",
+        diagram: "footprint",
+        diagramCaption: "Ugyanez a gyertya footprintként, magasabb árral felül. A kiemelt ask cellák adják a négysoros halmozódást.",
         table: {
           head: ["Ár", "Bid", "Ask", "Sor deltája"],
           rows: [["100,00", "40", "10", "−30"], ["100,25", "60", "180", "+120"], ["100,50", "50", "220", "+170"], ["100,75", "30", "170", "+140"], ["101,00", "20", "100", "+80"], ["101,25", "15", "25", "+10"]]
@@ -388,4 +390,4 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       { q: "Miért elfogadható kimenet a kivárás?", a: "Mert a modell előre meghatározott helyzeteket keres. Ha a helyszín, az érvénytelenítés vagy a várható elmozdulás hiányzik, a szabályos döntés a nem kötés." }
     ]
   }
-});
+};

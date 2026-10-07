@@ -1,0 +1,212 @@
+/* Kiegészítő funkciók: kereső, fogalomkártyák, leckeábrák, Go/No-Go, mock evaluation,
+   heti review, képernyőképek és mentési emlékeztető. */
+
+/* ---------- Apróságok ---------- */
+
+kbd {
+  display: inline-block;
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text-2);
+  font: 600 0.75rem/1.35rem var(--font-sans);
+  text-align: center;
+}
+.primary-button kbd { border-color: transparent; background: oklch(from var(--on-accent) l c h / 0.18); color: inherit; }
+.primary-button kbd, .secondary-button kbd { margin-left: 0.5rem; }
+
+.form-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+input[type="file"] { padding: 0.4rem 0.5rem; font-size: 0.875rem; }
+.lesson-lab { justify-self: start; }
+
+/* ---------- Gyorskereső ---------- */
+
+.search-modal { width: min(620px, calc(100% - 2rem)); padding: 0.9rem; margin-top: 12vh; }
+.search-modal .search-field input { min-height: 48px; border-color: transparent; background: var(--sunken); font-size: 1.0625rem; }
+.search-results { max-height: min(52vh, 420px); margin: 0.6rem 0 0; padding: 0; overflow-y: auto; list-style: none; }
+.search-results li { display: grid; grid-template-columns: 4.25rem minmax(0, 1fr); align-items: baseline; gap: 0.75rem; padding: 0.55rem 0.65rem; border-radius: var(--radius-sm); cursor: pointer; }
+.search-results li[aria-selected="true"] { background: var(--accent-soft); }
+.search-type { color: var(--text-3); font-size: 0.75rem; font-weight: 600; }
+.search-text strong { display: block; font-size: 0.9375rem; font-weight: 600; }
+.search-text small { display: block; overflow: hidden; color: var(--text-2); font-size: 0.8125rem; text-overflow: ellipsis; white-space: nowrap; }
+.search-modal .empty-inline { margin: 0.9rem 0.65rem; }
+.search-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-top: 0.7rem; padding: 0.7rem 0.65rem 0.1rem; border-top: 1px solid var(--line); color: var(--text-3); font-size: 0.8125rem; }
+.search-hint kbd + kbd { margin-left: -0.15rem; }
+.search-hint kbd:not(:first-child):not(kbd + kbd) { margin-left: 0.6rem; }
+
+/* ---------- Kattintható fogalmak ---------- */
+
+.term {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted var(--text-3);
+  text-underline-offset: 0.22em;
+  cursor: help;
+}
+.term:hover { text-decoration-color: var(--accent); color: var(--accent); }
+.term-popover {
+  position: fixed;
+  inset: auto;
+  width: min(320px, calc(100vw - 24px));
+  margin: 0;
+  padding: 0.85rem 1rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.term-popover strong { font-weight: 650; }
+.term-popover p { margin-top: 0.25rem; color: var(--text-2); font-size: 0.9375rem; line-height: 1.5; }
+.term-popover .text-button { min-height: 0; margin-top: 0.6rem; padding: 0; font-size: 0.875rem; text-align: left; }
+
+/* ---------- Leckeábrák ---------- */
+
+.diagram { margin: 1.1rem 0 0; }
+.lesson-article .diagram + p, .lesson-article .diagram + ul { margin-top: 0.9rem; }
+.diagram figcaption, .diagram__key { margin-top: 0.6rem; color: var(--text-3); font-size: 0.8125rem; line-height: 1.5; }
+.diagram__key { display: flex; align-items: center; gap: 0.45rem; }
+.diagram .chart-box { min-height: 0; }
+
+.book { display: grid; gap: 4px; }
+.book-row { display: grid; grid-template-columns: 3.25rem 3.75rem minmax(0, 1fr) 4.75rem; align-items: center; gap: 0.75rem; font-size: 0.875rem; }
+.book-row__side { color: var(--text-3); font-size: 0.8125rem; }
+.book-row__price, .book-row__size { font-variant-numeric: tabular-nums; }
+.book-row__price { text-align: right; font-weight: 550; }
+.book-row__size { color: var(--text-2); white-space: nowrap; }
+.book-row__track i { position: relative; display: block; height: 20px; overflow: hidden; border-radius: 0 4px 4px 0; }
+.book-row--ask .book-row__track i { background: var(--bad-soft); box-shadow: inset 0 0 0 1px var(--bad-line); }
+.book-row--bid .book-row__track i { background: var(--good-soft); box-shadow: inset 0 0 0 1px var(--good-line); }
+.book-row__track b, .book-key { background: var(--bad); }
+.book-row__track b { position: absolute; inset: 0 auto 0 0; }
+.book-row--spread { color: var(--text-3); font-size: 0.75rem; }
+.book-row--spread span:nth-child(2) { text-align: right; }
+.book-key, .fp-key { width: 12px; height: 12px; flex: 0 0 auto; border-radius: 3px; }
+
+.fp { display: grid; gap: 3px; max-width: 26rem; font-variant-numeric: tabular-nums; }
+.fp-row { display: grid; grid-template-columns: 4rem minmax(0, 1fr) 1rem minmax(0, 1fr) 4rem; align-items: center; gap: 0.4rem; font-size: 0.9375rem; }
+.fp-row--head { color: var(--text-3); font-size: 0.75rem; font-weight: 600; text-align: center; }
+.fp-row--head span:first-child, .fp-price { text-align: right; }
+.fp-row--head span:last-child, .fp-delta { text-align: right; }
+.fp-price { color: var(--text-2); }
+.fp-row.is-poc .fp-price { color: var(--text); font-weight: 650; }
+.fp-cell { padding: 0.3rem 0; border-radius: 5px; background: var(--sunken); text-align: center; }
+.fp-cell.is-good, .fp-key { background: var(--good-soft); box-shadow: inset 0 0 0 1px var(--good-line); }
+.fp-cell.is-good { color: var(--good); font-weight: 650; }
+.fp-cell.is-bad { background: var(--bad-soft); box-shadow: inset 0 0 0 1px var(--bad-line); color: var(--bad); font-weight: 650; }
+.fp-x { color: var(--text-3); text-align: center; }
+.fp-delta { color: var(--text-2); font-size: 0.875rem; }
+
+/* ---------- Go / No-Go ---------- */
+
+.verdict { max-width: 68ch; padding: 0.85rem 1.1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--sunken); line-height: 1.55; }
+.verdict strong { margin-right: 0.4rem; font-weight: 700; }
+.verdict p { display: inline; }
+.verdict.is-go { border-color: var(--good-line); background: var(--good-soft); }
+.verdict.is-go strong { color: var(--good); }
+.verdict.is-no-go { border-color: var(--warn-line); background: var(--warn-soft); }
+.verdict.is-no-go strong { color: var(--warn); }
+
+.criteria { max-width: 46rem; margin: 1.25rem 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.criterion { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 0.9rem; padding: 0.95rem 0; border-bottom: 1px solid var(--line); }
+.criterion__mark { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--text-2); font-size: 0.8125rem; font-weight: 600; }
+.criterion.is-pass .criterion__mark { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.criterion h3 { font-size: 1rem; }
+.criterion__state { margin-left: 0.4rem; color: var(--text-3); font-size: 0.8125rem; font-weight: 550; }
+.criterion.is-pass .criterion__state { color: var(--good); }
+.criterion p { margin-top: 0.2rem; color: var(--text-2); font-size: 0.9375rem; }
+.check-row { display: inline-flex; grid-auto-flow: column; align-items: center; gap: 0.5rem; margin-top: 0.45rem; color: var(--text); font-size: 0.9375rem; font-weight: 500; cursor: pointer; }
+.check-row input { width: 18px; height: 18px; min-height: 0; padding: 0; accent-color: var(--accent); }
+.criterion__evidence { margin-top: 0.5rem; }
+
+/* ---------- Mock evaluation ---------- */
+
+.mock-form .block-lead { margin-bottom: 1rem; }
+.mock-form .primary-button { margin-top: 1.1rem; }
+.mock-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; margin: 0.4rem 0 0.9rem; }
+.mock-head h3 { font-size: 1.125rem; }
+.mock-head p { max-width: 68ch; margin-top: 0.2rem; color: var(--text-2); font-size: 0.9375rem; }
+.mock-meter { max-width: 68ch; margin: 0.9rem 0 0.25rem; }
+#mock-active .chart-legend { margin-top: 1.5rem; }
+.mock-day { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; align-items: end; gap: 0.75rem; margin-top: 1.5rem; }
+#mock-days { margin-top: 1.25rem; }
+#mock-undo { margin-top: 0.4rem; }
+#mock-history h3 { margin: 2rem 0 0.4rem; font-size: 1rem; }
+.mock-history { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.mock-history li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--line); }
+.mock-history strong { display: block; font-weight: 600; }
+.mock-history small { color: var(--text-3); font-size: 0.875rem; }
+
+/* ---------- Heti review ---------- */
+
+.weekly-form { display: grid; gap: 1.1rem; }
+.weekly-form h2 { margin-bottom: 0; }
+.weekly-range { margin-top: -0.9rem; color: var(--text-3); font-size: 0.875rem; }
+.figure-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.scores { display: grid; gap: 1rem; }
+.score { min-width: 0; margin: 0; padding: 0; border: 0; }
+.score legend { padding: 0; font-weight: 650; }
+.score p { color: var(--text-2); font-size: 0.875rem; }
+.score__options { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+.score__options label { position: relative; display: block; cursor: pointer; }
+.score__options input { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; opacity: 0; cursor: pointer; }
+.score__options span {
+  width: 44px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.score__options input:checked + span { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.score__options input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Napló: szerkesztés és képernyőképek ---------- */
+
+.journal-entry__actions { display: flex; align-items: center; gap: 0.5rem; }
+.journal-entry__actions .text-button { min-height: 32px; padding: 0; font-size: 0.875rem; }
+.journal-entry.is-editing { margin-inline: -0.75rem; padding-inline: 0.75rem; border-radius: var(--radius); background: var(--accent-soft); }
+.journal-form__actions { margin-top: 1.25rem; }
+.journal-form .journal-form__actions .primary-button { margin-top: 0; }
+.journal-shot { display: block; margin-top: 0.7rem; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--sunken); }
+.journal-shot[hidden] { display: none; }
+.journal-shot img { display: block; max-width: 100%; max-height: 150px; }
+.shot-modal { width: min(1100px, calc(100% - 2rem)); padding: 0.75rem; }
+.shot-modal img { display: block; max-width: 100%; margin: 0 auto; border-radius: var(--radius-sm); }
+.shot-modal .icon-button { position: absolute; top: 1.25rem; right: 1.25rem; }
+.discipline-days { margin-top: 1.25rem; max-width: 46rem; }
+
+/* ---------- Mentés ---------- */
+
+.notice--backup { border-color: var(--accent-line); background: var(--accent-soft); }
+.notice--backup .notice__label { color: var(--accent); }
+.notice--backup .secondary-button { min-height: 36px; margin-top: 0.7rem; font-size: 0.875rem; }
+.notice--backup + .notice { margin-top: 1rem; }
+.backup-status { color: var(--text) !important; font-size: 0.9375rem; font-weight: 500; }
+.data-actions .button-row + .button-row { margin-top: 0.5rem; }
+
+/* ---------- Kisebb képernyők ---------- */
+
+@media (max-width: 860px) {
+  .form-grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mock-day { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mock-day .primary-button { grid-column: 1 / -1; }
+  .mock-head { flex-direction: column; gap: 0.75rem; }
+  .search-modal { margin-top: 1rem; }
+}
+@media (max-width: 560px) {
+  .form-grid.three { grid-template-columns: minmax(0, 1fr); }
+  .book-row { grid-template-columns: 2.9rem 3.4rem minmax(0, 1fr) 4.2rem; gap: 0.5rem; }
+  .score__options span { width: 40px; }
+  .search-results li { grid-template-columns: 3.6rem minmax(0, 1fr); gap: 0.5rem; }
+}

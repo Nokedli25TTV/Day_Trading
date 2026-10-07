@@ -1,6 +1,6 @@
 // Angol–magyar fogalomtár az Orderflow tanulási jegyzet 16. fejezete alapján.
 // [kifejezés, magyarázat, kapcsolódó lecke azonosítója]
-window.TRADECRAFT_GLOSSARY = [
+export const GLOSSARY = [
   ["Order flow", "A megbízások és végrehajtások folyamata.", "kotes-letrejotte"],
   ["Order book", "A várakozó vételi és eladási ajánlatok könyve.", "agressziv-passziv"],
   ["DOM", "Depth of Market: az ajánlati könyv árszintenkénti kijelzése.", "adatminoseg"],

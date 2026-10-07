@@ -1,5 +1,5 @@
 // 05 · Pszichológia és szimuláció: a leckék részletes törzsanyaga.
-window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
+export default {
   "evaluation-nyomas": {
     sections: [
       {
@@ -243,4 +243,4 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       { q: "Mit bizonyít néhány jó hét?", a: "Keveset. Lehet a piaci állapot, a véletlen és a szabályos munka közös eredménye. Új adat és kedvezőtlen környezet is kell hozzá." }
     ]
   }
-});
+};

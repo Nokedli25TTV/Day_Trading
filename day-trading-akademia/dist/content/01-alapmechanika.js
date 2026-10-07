@@ -1,5 +1,5 @@
 // 01 · Piaci alapmechanika: a leckék részletes törzsanyaga.
-window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
+export default {
   "kotes-letrejotte": {
     sections: [
       {
@@ -26,6 +26,8 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
     ],
     example: {
       title: "Egy 60 kontraktusos vétel három árszinten",
+      diagram: "order-book",
+      diagramCaption: "A vétel elfogyasztja a két legjobb eladási szintet, a harmadikból pedig 10-et visz el. A vételi oldal érintetlen marad.",
       table: { head: ["Eladási ár", "Várakozik", "Ebből teljesül"], rows: [["100,25", "20", "20"], ["100,50", "30", "30"], ["100,75", "80", "10"]] },
       body: [
         "Az átlagár (20 × 100,25 + 30 × 100,50 + 10 × 100,75) / 60 ≈ 100,4583. Az utolsó részlet 100,75-ön köt, de az egész megbízás nem ott teljesült.",
@@ -274,4 +276,4 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       { q: "Mi a hónap végi mérföldkő?", a: "Egy irányadó döntés (forex vagy futures), és két-három mondat arról, miért ezt választottad." }
     ]
   }
-});
+};

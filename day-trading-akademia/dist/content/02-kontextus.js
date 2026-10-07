@@ -1,9 +1,11 @@
 // 02 · Chart-kontextus és aukció: a leckék részletes törzsanyaga.
-window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
+export default {
   "arstruktura": {
     sections: [
       {
         title: "Trend és tartomány",
+        diagram: "structure",
+        diagramCaption: "Emelkedő struktúra magasabb csúcsokkal (HH) és mélypontokkal (HL), majd az első alacsonyabb csúcs (LH) és mélypont (LL).",
         body: [
           "Emelkedő struktúrában az ár magasabb csúcsokat és magasabb mélypontokat épít (HH, HL), csökkenőben alacsonyabb csúcsokat és mélypontokat (LH, LL). Ha egyik sem áll fenn következetesen, tartományban vagy.",
           "A struktúra mindig egy idősíkhoz tartozik. Ami a napi charton emelkedő trend, az az ötpercesen lehet egy órákig tartó esés. Mielőtt bármit trendnek nevezel, mondd ki, melyik idősíkon."
@@ -161,6 +163,8 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
     ],
     example: {
       title: "POC és value area számítása",
+      diagram: "profile",
+      diagramCaption: "Ugyanez a profil sávokkal: a kék sorok adják a value areát.",
       table: {
         head: ["Ársor", "Kötött kontraktus", "Részesedés"],
         rows: [["100,00", "60", "6%"], ["100,25", "180", "18%"], ["100,50", "320", "32%"], ["100,75", "230", "23%"], ["101,00", "140", "14%"], ["101,25", "70", "7%"]]
@@ -348,4 +352,4 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       { q: "Miért csúszik el évente kétszer a fő sáv magyar idő szerint?", a: "Mert az EU és az USA nem ugyanazon a napon állít órát, így 1–2 hétig más az időeltérés." }
     ]
   }
-});
+};

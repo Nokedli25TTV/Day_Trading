@@ -1,4 +1,5 @@
-window.TRADECRAFT_DATA = {
+// A tananyag váza: modulok és leckék, kvízkérdések, források.
+export const DATA = {
   modules: [
     {
       id: "alapmechanika",

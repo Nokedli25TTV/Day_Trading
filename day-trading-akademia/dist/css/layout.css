@@ -1,0 +1,172 @@
+/* ---------- Váz: lebegő üveg navigáció ---------- */
+
+.app-shell { min-height: 100vh; }
+
+.navbar {
+  position: sticky;
+  top: 12px;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(1160px, calc(100% - 1.5rem));
+  margin: 12px auto 0;
+  padding: 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.8);
+  backdrop-filter: blur(22px) saturate(1.8);
+  box-shadow: var(--glass-shadow);
+}
+/* Felső fénycsík: ettől lesz az üvegnek éle. */
+.navbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to bottom, var(--glass-sheen), transparent 60%);
+  pointer-events: none;
+}
+.navbar > * { position: relative; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .navbar { background: var(--surface); }
+}
+
+.brand {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 2px 12px 2px 2px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  text-align: left;
+}
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  padding: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.brand-mark i { width: 3px; border-radius: 2px; background: var(--on-accent); }
+.brand-mark i:nth-child(1) { height: 8px; }
+.brand-mark i:nth-child(2) { height: 16px; }
+.brand-mark i:nth-child(3) { height: 11px; }
+.brand-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.015em; transition: color 150ms ease; }
+
+.main-nav { position: relative; display: flex; gap: 2px; }
+/* Az aktív elem mögötti kapszula: a teljes sávot fedi, és kivágással csúszik a helyére. */
+.nav-indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--glass-active);
+  clip-path: inset(0 var(--r, 100%) 0 var(--l, 0px) round 999px);
+  pointer-events: none;
+}
+.main-nav.is-ready .nav-indicator { transition: clip-path 280ms var(--ease-out); }
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 36px;
+  padding: 0 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  font-weight: 550;
+  white-space: nowrap;
+  transition: color 150ms ease, background-color 150ms ease, transform 140ms var(--ease-out);
+}
+.nav-item:active { transform: scale(0.97); }
+.nav-item svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--text-3); transition: color 150ms ease; }
+.nav-item.active { color: var(--text); }
+.nav-item.active svg { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:not(.active):hover { background: var(--glass-hover); color: var(--text); }
+  .brand:hover .brand-name { color: var(--accent); }
+}
+
+.navbar-tools { justify-self: end; display: flex; align-items: center; gap: 0.85rem; }
+.nav-progress { display: grid; gap: 5px; min-width: 96px; color: var(--text-2); font-size: 0.75rem; font-weight: 550; text-align: right; }
+.nav-progress .meter { height: 3px; margin: 0; background: var(--glass-active); }
+.icon-button--glass { width: 36px; height: 36px; border-color: transparent; border-radius: 50%; background: var(--glass-active); }
+
+.meter { height: 4px; margin: 0.55rem 0 0.5rem; overflow: hidden; border-radius: 2px; background: var(--line); }
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms var(--ease-out);
+}
+
+.main-content {
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  padding: 2.25rem 2rem 5rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+.topbar-title { min-width: 0; }
+.kicker { min-height: 1.3rem; color: var(--text-3); font-size: 0.875rem; }
+.topbar h1 { margin-top: 0.1rem; font-size: 1.75rem; line-height: 1.15; letter-spacing: -0.022em; }
+.topbar-actions { display: flex; align-items: center; gap: 0.9rem; }
+.topbar-settings { display: none; }
+.save-state { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--text-3); font-size: 0.8125rem; white-space: nowrap; }
+.save-state > span { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+.save-state.error { color: var(--bad); }
+.save-state.error > span { background: var(--bad); }
+
+.app-view[hidden],
+.practice-panel[hidden] { display: none !important; }
+
+.view-lead { max-width: 68ch; margin-bottom: 1.5rem; color: var(--text-2); font-size: 1.0625rem; line-height: 1.6; }
+.view-lead-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
+.view-lead-row .view-lead { margin-bottom: 0; }
+
+.block { margin-top: 2.75rem; }
+.block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.6rem; }
+.block-head h2, .rail-block h2, .tool h2, .journal-form h2 { font-size: 1.125rem; }
+.block-head__aside { color: var(--text-3); font-size: 0.875rem; white-space: nowrap; }
+.block-head__aside strong { color: var(--text-2); font-weight: 600; }
+.block-lead { max-width: 68ch; color: var(--text-2); }
+.fine-print { max-width: 75ch; margin-top: 1.25rem; color: var(--text-3); font-size: 0.8125rem; line-height: 1.55; }
+
+.empty-state {
+  padding: 2.25rem 1.25rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.empty-state h3 { font-size: 1rem; }
+.empty-state p { max-width: 44ch; margin: 0.3rem auto 0; color: var(--text-2); font-size: 0.9375rem; }
+.empty-state button { margin-top: 1rem; }
+.empty-inline { margin-top: 1rem; color: var(--text-3); font-size: 0.9375rem; }
+
+/* Négy lecke = egy modul. Ugyanez a jel mutatja a haladást mindenhol. */
+.ticks { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 14px; gap: 3px; }
+.ticks i { height: 4px; border-radius: 2px; background: var(--line-strong); }
+.ticks i.on { background: var(--accent); }

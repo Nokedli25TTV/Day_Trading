@@ -1,5 +1,5 @@
 // 06 · Due diligence és Go/No-Go: a leckék részletes törzsanyaga.
-window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
+export default {
   "prop-diligence": {
     sections: [
       {
@@ -106,14 +106,16 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       {
         title: "USA: intraday margin és a PDT-keret",
         body: [
-          "A FINRA új intraday margin rendszere már hatályos, de a brókercégek 2027. október 20-ig átmeneti időszakot kaptak. 2026-ban ezért brókerenként eltérhet, melyik gyakorlat érvényes: mindig a konkrét brókernél, a konkrét számlatípusra kérdezz rá.",
-          "A részvénypiaci pattern day trader keret amerikai margin számlákra vonatkozik. Nem vetíthető rá automatikusan futuresre, forexre vagy egy uniós számlára."
+          "A FINRA 2026. június 4-én hatályba lépett szabálya a korábbi pattern day trader (PDT) előírásokat napon belüli margin-követelményekkel váltja fel. Megszűnik a kötésszám szerinti PDT-besorolás és az ahhoz kötött 25 000 dolláros minimum; a cégek ehelyett napközben figyelik, hogy a számla saját tőkéje fedezi-e a pozíciókat.",
+          "A brókercégek 18 hónapos átmeneti időszakot kaptak 2027. október 20-ig. Addig brókerenként eltérhet, melyik rendszer él: mindig a konkrét brókernél, a konkrét számlatípusra kérdezz rá.",
+          "A szabály amerikai margin számlákra vonatkozik. Nem vetíthető rá automatikusan futuresre, forexre vagy egy uniós számlára. (Forrás: FINRA befektetői összefoglaló, ellenőrizve 2026. október 7-én.)"
         ]
       },
       {
         title: "EU: perpetual termékek és CFD",
         body: [
-          "Az ESMA 2026-ban emlékeztette a cégeket, hogy bizonyos perpetual futures termékek a jellemzőik alapján CFD-nek minősülhetnek, és ilyenkor a CFD-kre vonatkozó termékintervenciós szabályok érvényesek rájuk. A termék neve tehát nem dönti el a besorolást."
+          "Az ESMA 2026. február 24-i közleménye szerint a perpetual futures vagy perpetual contract néven kínált, tőkeáttételes származtatott termékek valószínűleg a CFD-kre vonatkozó nemzeti termékintervenciós intézkedések hatálya alá esnek. A termék neve tehát nem dönti el a besorolást.",
+          "Ha egy termék CFD-nek minősül, a szolgáltatóra tőkeáttételi korlát, kötelező kockázati figyelmeztetés, margin close-out szabály, negatív egyenleg elleni védelem és az ösztönzők tilalma vonatkozik. (Forrás: ESMA közlemény, ellenőrizve 2026. október 7-én.)"
         ]
       },
       {
@@ -232,4 +234,4 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       { q: "Melyik számlamérettel indulsz Go esetén?", a: "A legolcsóbb elérhető szinttel, változatlan szabályokkal és mérettel." }
     ]
   }
-});
+};

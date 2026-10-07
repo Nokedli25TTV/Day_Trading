@@ -1,5 +1,5 @@
 // 03 · Kockázat és prop szabályok: a leckék részletes törzsanyaga.
-window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
+export default {
   "r-nyelve": {
     sections: [
       {
@@ -154,6 +154,8 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       },
       {
         title: "Miért csapda az intraday trailing",
+        diagram: "drawdown-types",
+        diagramCaption: "Ugyanaz az öt nap, három küszöb. A 2. napi papírprofit után az intraday küszöb hagyja a legszűkebb sávot, és a 4. napon el is fogy.",
         body: [
           "Nyitott pozíción átmenetileg 800 USD papírprofitod van. Az intraday küszöb azonnal 800-zal feljebb ugrik. Ha a piac visszafordul, és a nyereséged 200-ra olvad, a küszöb fent marad: 600 USD mozgásteret veszítettél egy olyan kötésen, amely nyereséggel zárt.",
           "Nap végi trailingnél ugyanez a nap csak a záró egyenleg szerint mozdítaná a küszöböt. Ezt a különbséget egy kezdő gyakran csak akkor veszi észre, amikor elfogyott a mozgástere."
@@ -239,4 +241,4 @@ window.TRADECRAFT_CONTENT = Object.assign(window.TRADECRAFT_CONTENT || {}, {
       { q: "Mi hiányzik abból a szabályból, hogy „a napi limitem 2R”?", a: "A teendő. Mi történik, amikor eléred: zárod a platformot, meddig tart a szünet, mikor kereskedhetsz újra." }
     ]
   }
-});
+};

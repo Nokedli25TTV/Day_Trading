@@ -4,7 +4,9 @@ Magyar nyelvű, egyfelhasználós day trading tanulófelület. A tulajdonos saj�
 (`Day Trading RoadMap.md`, `Orderflow_tanulasi_jegyzet.md`) épül: 6 hónapos terv, 35 lecke,
 kvíz, laborok, gyakorlási napló, Go/No-Go lista. Oktatási eszköz, nem befektetési tanácsadás.
 
-- Repó: https://github.com/Nokedli25TTV/Day_Trading (privát), fő ág: `main`
+- Repó: https://github.com/Nokedli25TTV/Day_Trading, fő ág: `main`. **Nyilvános** 2026-10-08 óta, a tulajdonos
+  kifejezett döntése alapján: minden, amit ide feltöltesz, bárki számára olvasható. Titkot, jelszót és új személyes
+  adatot ne commitolj.
 - A felhasználóval magyarul beszélj. A felület, a kódkommentek és a commitüzenetek is magyarok.
 
 ## A legfontosabb szabály: kis modulok
@@ -43,7 +45,8 @@ node day-trading-akademia/tools/make-icons.mjs # az alkalmazásikonok újragener
 
 ## Közzététel jelszóval
 
-A `dist` mappa a helyi, nyílt változat: **ezt soha ne tedd közzé**, mert a tananyag olvasható benne.
+A `dist` mappa a helyi, nyílt változat. Amíg a repó nyilvános, a tananyag a forrásban is olvasható, így a jelszavas
+kiadás csak kényelmi kapu, nem valódi védelem; valódi védelemhez a forrásnak privátnak kell lennie.
 A nyilvános kiadást a `node tools/build-public.mjs` állítja elő a `day-trading-akademia/public` mappába
 (a git nem követi). Ebben a tananyag egyetlen titkosított fájl (`content.enc.json`, AES-256-GCM,
 PBKDF2-SHA256 600 000 körrel), a `data.js`, a `content/index.js` és a `content/fogalomtar.js` helyén pedig

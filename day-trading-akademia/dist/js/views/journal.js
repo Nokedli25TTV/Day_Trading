@@ -2,6 +2,8 @@
 import { state, commit, onRender, recordActivity } from "../store.js";
 import { showToast } from "../toast.js";
 import { saveAttachment, deleteAttachment, attachmentURL } from "../features/attachments.js";
+import { renderRuleChoices } from "./rulebook.js";
+import { applyGate } from "./precheck.js";
 import { modeLabel, directionLabel, emotionLabel, ruleLabel } from "../labels.js";
 import { $, $$, setText, escapeHTML, formatNumber, formatDate, signedR, hasNumber, formObject, localDateKey, uid, downloadFile } from "../util.js";
 
@@ -21,6 +23,7 @@ function entryFields(input) {
   };
   Object.entries(TEXT_FIELDS).forEach(([name, max]) => { fields[name] = String(input[name] || "").trim().slice(0, max); });
   VALUE_FIELDS.forEach((name) => { fields[name] = input[name] ?? ""; });
+  fields.brokenRules = Array.isArray(input.brokenRules) ? input.brokenRules : [];
   if (!fields.symbol || !fields.setup || !fields.lesson) throw new Error("Az instrumentum, a setup és a tanulság kötelező.");
   return fields;
 }
@@ -50,6 +53,9 @@ function setFormMode(entry) {
   setText("#journal-submit", entry ? "Módosítás mentése" : "Bejegyzés mentése");
   $("#journal-cancel").hidden = !entry;
   form.reset();
+  if (entry) form.dataset.editing = "1"; else delete form.dataset.editing;
+  renderRuleChoices(entry?.brokenRules || []);
+  applyGate();
   if (!entry) {
     form.elements.tradedAt.value = localDateKey();
     return;
@@ -57,7 +63,7 @@ function setFormMode(entry) {
   ["mode", "tradedAt", "direction", "emotion", "ruleFollowed", ...Object.keys(TEXT_FIELDS), ...VALUE_FIELDS].forEach((name) => {
     form.elements[name].value = entry[name] ?? "";
   });
-  form.querySelector(".form-more").open = ["observation", "hypothesis", "invalidation", "mae", "mfe"].some((name) => entry[name]) || Boolean(entry.attachment);
+  form.querySelector(".form-more").open = ["observation", "hypothesis", "invalidation", "mae", "mfe"].some((name) => entry[name]) || Boolean(entry.attachment) || entry.brokenRules?.length > 0;
   form.scrollIntoView({ block: "start" });
   form.elements.symbol.focus({ preventScroll: true });
 }
@@ -67,7 +73,8 @@ async function submit(event) {
   const form = event.currentTarget;
   const file = form.elements.screenshot.files[0];
   try {
-    const { screenshot, ...input } = formObject(form);
+    const { screenshot, broken, ...input } = formObject(form);
+    input.brokenRules = new FormData(form).getAll("broken");
     const entry = editingId ? updateJournalEntry(editingId, input) : addJournalEntry(input);
     if (file) {
       await saveAttachment(entry.id, file);
@@ -100,7 +107,7 @@ function renderJournal() {
         <div><strong>${escapeHTML(entry.symbol)} · ${escapeHTML(directionLabel(entry.direction))}</strong><small>${formatDate(entry.tradedAt)} · ${escapeHTML(modeLabel(entry.mode))}${entry.updatedAt ? " · szerkesztve" : ""}</small></div>
         <div class="journal-entry__actions"><button class="text-button" type="button" data-edit-entry="${entry.id}">Szerkesztés</button><button class="delete-entry" type="button" data-delete-entry="${entry.id}" aria-label="Bejegyzés törlése">×</button></div>
       </div>
-      <div class="journal-entry__badges"><span class="${tone}">${hasNumber(entry.resultR) ? signedR(result) : "R: –"}</span><span>${escapeHTML(entry.setup)}</span><span>Szabály: ${escapeHTML(ruleLabel(entry.ruleFollowed))}</span><span>${escapeHTML(emotionLabel(entry.emotion))}</span>${excursion("MAE", entry.mae)}${excursion("MFE", entry.mfe)}</div>
+      <div class="journal-entry__badges"><span class="${tone}">${hasNumber(entry.resultR) ? signedR(result) : "R: –"}</span><span>${escapeHTML(entry.setup)}</span><span>Szabály: ${escapeHTML(ruleLabel(entry.ruleFollowed))}</span><span>${escapeHTML(emotionLabel(entry.emotion))}</span>${entry.brokenRules?.length ? `<span class="is-bad">${entry.brokenRules.length} megszegett szabály</span>` : ""}${excursion("MAE", entry.mae)}${excursion("MFE", entry.mfe)}</div>
       ${detail("Megfigyelés", entry.observation)}${detail("Hipotézis", entry.hypothesis)}${detail("Érvénytelenítés", entry.invalidation)}
       <p>${escapeHTML(entry.lesson)}</p>
       ${entry.attachment ? `<button class="journal-shot" type="button" data-shot="${entry.id}" aria-label="Képernyőkép megnyitása" hidden><img alt="" /></button>` : ""}

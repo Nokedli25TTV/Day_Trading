@@ -2,6 +2,7 @@
 // A nézetek az `state`-ből olvasnak, módosítás után `commit()`-ot hívnak: mentés + újrarajzolás.
 import { localDateKey } from "./logic/dates.js";
 import { showToast } from "./toast.js";
+import { defaultRulebook, normalizeRulebook } from "./logic/rulebook.js";
 
 export const STORAGE_KEY = new URLSearchParams(location.search).has("qa")
   ? "tradecraft-academy-qa-v1"
@@ -29,6 +30,8 @@ export function createDefaultState() {
     studyLog: {},
     weeklyReviews: [],
     readiness: {},
+    rulebook: defaultRulebook(),
+    preChecks: {},
     mocks: [],
     settings: { reducedMotion: false, theme: "system" },
   };
@@ -60,6 +63,8 @@ export function normalizeState(parsed) {
     studyLog: object(parsed.studyLog),
     weeklyReviews: list(parsed.weeklyReviews),
     readiness: object(parsed.readiness),
+    rulebook: normalizeRulebook(parsed.rulebook),
+    preChecks: object(parsed.preChecks),
     mocks: list(parsed.mocks),
   };
 }

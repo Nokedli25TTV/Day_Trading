@@ -1,0 +1,38 @@
+/* Szabálykönyv, kereskedés előtti ellenőrzőlista és a nyomtatási nézet. */
+
+.precheck { max-width: 46rem; margin-bottom: 2rem; padding: 1.1rem 1.25rem 1.2rem; border: 1px solid var(--warn-line); border-radius: var(--radius); background: var(--warn-soft); }
+.precheck.is-done { border-color: var(--line); background: var(--sunken); }
+.precheck h2 { font-size: 1.0625rem; }
+.precheck-list { margin: 0.2rem 0 0; padding: 0; list-style: none; }
+.precheck-list .check-row { display: flex; align-items: flex-start; margin-top: 0.55rem; line-height: 1.45; }
+.precheck-list .check-row input { flex: 0 0 auto; margin-top: 0.15rem; }
+.precheck-status { margin-top: 0.8rem; color: var(--text-2); font-size: 0.875rem; font-weight: 550; }
+.journal-form.is-gated { opacity: 0.45; }
+
+.rule-choices { min-width: 0; margin: 0; padding: 0; border: 0; }
+.rule-choices legend { padding: 0; color: var(--text-2); font-size: 0.875rem; font-weight: 550; }
+.rule-choices .check-row { display: flex; align-items: flex-start; font-weight: 400; line-height: 1.45; }
+.rule-choices .check-row input { flex: 0 0 auto; margin-top: 0.15rem; }
+
+.rulebook { display: grid; gap: 2.5rem; max-width: 46rem; }
+.rulebook-section h3 { font-size: 1.125rem; }
+.rulebook-lead { margin-top: 0.2rem; color: var(--text-2); font-size: 0.9375rem; }
+.rulebook-list { margin: 0.8rem 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); counter-reset: rule; }
+.rulebook-list li { counter-increment: rule; display: grid; grid-template-columns: 1.75rem minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line); line-height: 1.5; }
+.rulebook-list li::before { content: counter(rule) "."; color: var(--text-3); font-size: 0.875rem; font-weight: 600; }
+.rulebook-list strong { font-weight: 650; }
+.rulebook-list .rulebook-empty { display: block; color: var(--text-3); }
+.rulebook-list .rulebook-empty::before { content: none; }
+.rulebook-form { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; }
+.rulebook-form label { flex: 1 1 14rem; }
+
+/* Nyomtatás: csak a szabálykönyv, gombok és űrlapok nélkül, egy oldalra. */
+@media print {
+  body { background: none; }
+  .navbar, .topbar, .tab-list, .view-lead-row, .rulebook-form, .rulebook-lead, .delete-question, .toast-region, .boot-error { display: none !important; }
+  .app-view:not(#view-naplo), #view-naplo > [data-panel]:not(#journal-rulebook) { display: none !important; }
+  #journal-rulebook { display: block !important; }
+  .main-content { padding: 0; }
+  .rulebook { gap: 1.25rem; max-width: none; }
+  .rulebook-list li { grid-template-columns: 1.75rem minmax(0, 1fr); break-inside: avoid; }
+}

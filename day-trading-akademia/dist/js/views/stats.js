@@ -2,6 +2,7 @@
 import { state, onRender } from "../store.js";
 import { journalStats } from "../logic/calc.js";
 import { dailyDiscipline } from "../logic/readiness.js";
+import { brokenRuleCounts } from "../logic/rulebook.js";
 import { lineChart } from "../charts.js";
 import { getCurrentView, onViewShown } from "../router.js";
 import { currentTab, onTab } from "../tabs.js";
@@ -89,6 +90,11 @@ function renderStats() {
     <thead><tr><th scope="col">Csoport</th><th scope="col" class="num">Kötés</th><th scope="col" class="num">Találati arány</th><th scope="col" class="num">Átlag</th><th scope="col" class="num">Összesen</th></tr></thead>
     <tbody>${groups.map((group) => `<tr><td>${escapeHTML(labelOf(group.key))}</td><td class="num">${group.count}</td><td class="num">${formatNumber(group.winRate, 0)}%</td><td class="num">${signedR(group.expectancy)}</td><td class="num">${signedR(group.totalR)}</td></tr>`).join("")}</tbody>
   </table></div></section>`;
+  const broken = brokenRuleCounts(entries, state.rulebook.rules);
+  $("#stats-rules").innerHTML = broken.length
+    ? `<div class="table-wrap"><table><thead><tr><th scope="col">Szabály</th><th scope="col" class="num">Megszegve</th></tr></thead><tbody>${broken.map((row) => `<tr><td>${escapeHTML(row.rule.text)}</td><td class="num">${row.count} alkalom</td></tr>`).join("")}</tbody></table></div>`
+    : '<p class="empty-inline">Még egy bejegyzésnél sem jelöltél megszegett szabályt.</p>';
+
   $("#stats-tables").innerHTML = breakdown("Setup szerint", stats.bySetup, (key) => key)
     + breakdown("Szabálykövetés szerint", stats.byRule, ruleGroupLabel)
     + breakdown("Érzelmi állapot szerint", stats.byEmotion, (key) => capitalize(emotionLabel(key)));

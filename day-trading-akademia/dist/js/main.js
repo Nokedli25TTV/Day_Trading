@@ -15,6 +15,8 @@ import { initJournal } from "./views/journal.js";
 import { initQuestions } from "./views/questions.js";
 import { initStats } from "./views/stats.js";
 import { initWeeklyReview } from "./views/weekly-review.js";
+import { initRulebook } from "./views/rulebook.js";
+import { initPrecheck } from "./views/precheck.js";
 import { initSettings } from "./views/settings.js";
 import { initStudyTime } from "./features/study-time.js";
 import { initBackup } from "./features/backup.js";
@@ -27,7 +29,7 @@ initTabs();
 initRouter();
 [
   initOverview, initRoadmap, initReadiness, initLibrary, initLesson, initQuiz, initReview, initLabs,
-  initJournal, initQuestions, initStats, initWeeklyReview, initSettings, initStudyTime, initSearch, initTerms,
+  initJournal, initQuestions, initStats, initWeeklyReview, initRulebook, initPrecheck, initSettings, initStudyTime, initSearch, initTerms,
 ].forEach((init) => init());
 
 refresh();

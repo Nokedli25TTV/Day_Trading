@@ -43,6 +43,12 @@ node day-trading-akademia/tools/make-icons.mjs # az alkalmazásikonok újragener
 - A `day-trading-akademia/.openai/hosting.json` egy külső tárhely beállítása, amelyhez innen nincs
   feltöltőeszköz. Az élő oldalt a felhasználó frissíti.
 
+## Élő oldal
+
+Az oldal GitHub Pages-en fut: https://nokedli25ttv.github.io/Day_Trading/ (a `dist` mappa, belépés nélkül).
+A `.github/workflows/pages.yml` minden `main`-re küldött változásnál lefuttatja a teszteket, és ha zöldek,
+közzéteszi. **A push tehát élesítés:** előtte futtasd a teszteket, és nézd meg a változást a böngészőben.
+
 ## Közzététel jelszóval
 
 A `dist` mappa a helyi, nyílt változat. Amíg a repó nyilvános, a tananyag a forrásban is olvasható, így a jelszavas
@@ -75,8 +81,8 @@ sort tölt be; a többi modul importtal kapcsolódik.
 | `js/store.js` | Az állapot: betöltés, mentés, `commit()`, `onRender()`. |
 | `js/router.js`, `js/tabs.js` | Nézetváltás hash-sel; fülek `data-tab="csoport:név"` / `data-panel` párokkal. |
 | `js/lessons.js`, `js/review-deck.js`, `js/labels.js`, `js/util.js` | Közös modell és segédfüggvények. |
-| `js/logic/` | **Tiszta számolás**, DOM és állapot nélkül, tesztekkel: `calc`, `dates`, `schedule`, `review`, `readiness`, `search`. |
-| `js/views/` | Egy nézet vagy fül = egy modul (`overview`, `roadmap`, `readiness`, `library`, `lesson`, `quiz`, `review`, `labs`, `journal`, `questions`, `stats`, `weekly-review`, `settings`). |
+| `js/logic/` | **Tiszta számolás**, DOM és állapot nélkül, tesztekkel: `calc`, `dates`, `schedule`, `review`, `readiness`, `rulebook`, `search`. |
+| `js/views/` | Egy nézet vagy fül = egy modul (`overview`, `roadmap`, `readiness`, `library`, `lesson`, `quiz`, `review`, `labs`, `journal`, `precheck`, `rulebook`, `questions`, `stats`, `weekly-review`, `settings`). |
 | `js/features/` | Nézetfüggetlen funkciók (`backup`, `attachments`, `idb`, `search`, `terms`, `study-time`, `pwa`, `webmcp`). |
 | `js/lock/` | A nyilvános kiadás belépése: `crypto.js` (böngészőben és Node-ban is fut), `unlock.js`. Helyben nem töltődik be. |
 | `js/charts.js`, `js/diagrams.js` | SVG vonaldiagram; leckeábrák és a laborokkal közös megjelenítők. |
@@ -100,8 +106,8 @@ a `store.js`-ben; régi és importált mentést a `normalizeState()` egészít k
 vegyél fel**, különben a meglévő felhasználói adat eltörik.
 
 Mezők: `profile` (napi cél, `dailyLimitR`, `startDate`, `lastExportAt`), `progress[leckeId]`, `quizAttempts`,
-`journalEntries`, `questions`, `reviews[kártyaId]`, `studyLog[nap]`, `weeklyReviews`, `readiness[kulcs]`,
-`mocks`, `activityDates`, `settings`.
+`journalEntries` (benne `brokenRules[]`), `questions`, `reviews[kártyaId]`, `studyLog[nap]`, `weeklyReviews`,
+`readiness[kulcs]`, `mocks`, `rulebook` (`rules`, `ifThen`, `checklist`), `preChecks[nap]`, `activityDates`, `settings`.
 
 IndexedDB (`tradecraft-akademia`): a napló képernyőképei és az automatikus mentés fájlkezelője.
 Ezek nincsenek benne a JSON mentésben.
@@ -114,7 +120,7 @@ Ezek nincsenek benne a JSON mentésben.
 
 ### CSS betöltési sorrend
 
-`tokens → base → layout → components → overview → lessons → practice → journal → features → responsive`.
+`tokens → base → layout → components → overview → lessons → practice → journal → features → lock → rulebook → responsive`.
 A médialekérdezések a `responsive.css`-be (vagy a `features.css` végére) kerülnek: ha korábbi fájlba
 teszed őket, a később betöltött alapszabály felülírja, és telefonon szétesik az elrendezés.
 
@@ -176,11 +182,19 @@ Papír + kék tinta: nyugodt tanulófelület, szándékosan nem „kereskedési 
 - **5. kör:** indító (`Inditas.bat`) és látható indulási hibaüzenet. Jelszóval védett nyilvános kiadás:
   titkosított tananyag, belépőoldal, „maradjak bejelentkezve”, kijelentkezés. 54 teszt.
 
+- **6. kör (2026-10-08):** a repó nyilvános lett, az oldal GitHub Pages-re került. Szabálykönyv (szabályok,
+  ha–akkor tervek, nyomtatható), kereskedés előtti ellenőrzőlista, amely zárja az új naplóbejegyzést, és a
+  megszegett szabályok követése a naplóban és a statisztikában. 58 teszt.
+
 ### Nyitott ötletek
 
+- Vizsga mód modulzáró teszttel; generált számolós feladatok; charthelyzet-gyakorló; hibafüzet.
+- Setup-kártyák saját statisztikával; érzelmi minták; havi összefoglaló a heti review-kból.
+- Session-óra magyar idő szerint; saját kontraktus-puska; prop cég összehasonlító lap; CSV import a platformból.
+- Szinkron eszközök között; emlékeztetők; a kezdőlap testreszabása; angol felület.
+
 - A betűtípus helyben tárolása (most a service worker gyorsítótárazza az első online betöltés után).
-- Szabálykönyv- és ha–akkor szerkesztő, nyomtatható egyoldalas formában.
 - A képernyőképek belefoglalása a mentésbe (például külön ZIP export).
 - További leckeábrák: delta és CVD, erőfeszítés és eredmény, session-idők.
 - A tartalom lektorálása a felhasználóval; az adózási lecke ellenőrzése szakemberrel.
-- Az élő (hosztolt) oldal frissítése: ehhez a felhasználó tárhely-hozzáférése kell.
+- A régi, külső tárhelyen lévő változat (`.openai/hosting.json`) elavult; azt csak a felhasználó tudja frissíteni vagy törölni.

@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="./css/journal.css" />
     <link rel="stylesheet" href="./css/features.css" />
     <link rel="stylesheet" href="./css/lock.css" />
+    <link rel="stylesheet" href="./css/rulebook.css" />
     <link rel="stylesheet" href="./css/responsive.css" />
   </head>
   <body>
@@ -464,8 +465,14 @@
             <button class="practice-tab active" type="button" role="tab" aria-selected="true" aria-controls="journal-entries" data-tab="journal:entries">Bejegyzések</button>
             <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="journal-stats" data-tab="journal:stats">Statisztika</button>
             <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="journal-weekly" data-tab="journal:weekly">Heti review</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="journal-rulebook" data-tab="journal:rules">Szabálykönyv</button>
           </div>
           <div id="journal-entries" data-panel="journal:entries" role="tabpanel">
+          <section class="precheck" id="precheck" aria-labelledby="precheck-title" hidden>
+            <div class="block-head"><h2 id="precheck-title">Kereskedés előtt</h2><button class="text-button" type="button" data-tab="journal:rules">Lista szerkesztése</button></div>
+            <ul class="precheck-list" id="precheck-list"></ul>
+            <p class="precheck-status" id="precheck-status" role="status"></p>
+          </section>
           <div class="journal-layout">
             <form class="journal-form" id="journal-form">
               <h2 id="journal-form-title">Új bejegyzés</h2>
@@ -490,6 +497,7 @@
                     <label>MAE (R)<input name="mae" type="number" min="0" step="0.01" inputmode="decimal" placeholder="legnagyobb ellened" /></label>
                     <label>MFE (R)<input name="mfe" type="number" min="0" step="0.01" inputmode="decimal" placeholder="legnagyobb melletted" /></label>
                     <label class="full">Képernyőkép (nem kötelező)<input name="screenshot" type="file" accept="image/*" /></label>
+                    <div class="full" id="journal-rules"></div>
                   </div>
                 </details>
                 <label class="full">Tanulság<textarea name="lesson" rows="4" maxlength="600" placeholder="Tény → döntés → mi erősítette vagy cáfolta?" required></textarea></label>
@@ -551,6 +559,37 @@
               <section class="block" aria-labelledby="breakdown-title">
                 <div class="block-head"><h2 id="breakdown-title">Bontások</h2><span class="block-head__aside">Csak az R-eredménnyel rögzített kötések</span></div>
                 <div class="stats-tables" id="stats-tables"></div>
+              </section>
+              <section class="block" aria-labelledby="stats-rules-title">
+                <div class="block-head"><h2 id="stats-rules-title">Megszegett szabályok</h2><span class="block-head__aside">A bejegyzéseknél megjelöltek alapján</span></div>
+                <div class="discipline-days" id="stats-rules"></div>
+              </section>
+            </div>
+          </div>
+
+          <div id="journal-rulebook" data-panel="journal:rules" role="tabpanel" hidden>
+            <div class="view-lead-row">
+              <p class="view-lead">A saját szabályaid egy oldalon. Nyugodt állapotban írd meg, kereskedés közben csak végrehajtod.</p>
+              <button class="secondary-button" id="rulebook-print" type="button">Nyomtatás</button>
+            </div>
+            <div class="rulebook">
+              <section class="rulebook-section" aria-labelledby="rulebook-rules-title">
+                <h3 id="rulebook-rules-title">Szabályok</h3>
+                <p class="rulebook-lead">Ezek közül jelölheted meg a naplóban, ha valamelyiket megszegted.</p>
+                <ul class="rulebook-list" id="rulebook-rules"></ul>
+                <form class="rulebook-form" data-rulebook-form="rules"><label><span class="sr-only">Új szabály</span><input name="text" type="text" maxlength="200" placeholder="pl. Hír előtt 10 perccel nem nyitok pozíciót." required /></label><button class="secondary-button" type="submit">Szabály hozzáadása</button></form>
+              </section>
+              <section class="rulebook-section" aria-labelledby="rulebook-ifThen-title">
+                <h3 id="rulebook-ifThen-title">Ha–akkor tervek</h3>
+                <p class="rulebook-lead">Egy helyzet és a hozzá tartozó kész cselekvés.</p>
+                <ul class="rulebook-list" id="rulebook-ifThen"></ul>
+                <form class="rulebook-form" data-rulebook-form="ifThen"><label><span class="sr-only">Ha</span><input name="when" type="text" maxlength="200" placeholder="Ha… pl. elérem a napi limitet" required /></label><label><span class="sr-only">Akkor</span><input name="then" type="text" maxlength="200" placeholder="akkor… pl. bezárom a platformot" required /></label><button class="secondary-button" type="submit">Terv hozzáadása</button></form>
+              </section>
+              <section class="rulebook-section" aria-labelledby="rulebook-checklist-title">
+                <h3 id="rulebook-checklist-title">Kereskedés előtti ellenőrzőlista</h3>
+                <p class="rulebook-lead">Amíg a mai lista nincs kipipálva, új naplóbejegyzés nem rögzíthető. Üres listával nincs zár.</p>
+                <ul class="rulebook-list" id="rulebook-checklist"></ul>
+                <form class="rulebook-form" data-rulebook-form="checklist"><label><span class="sr-only">Új pont</span><input name="text" type="text" maxlength="200" placeholder="pl. Bejelöltem az előző session POC-ját." required /></label><button class="secondary-button" type="submit">Pont hozzáadása</button></form>
               </section>
             </div>
           </div>

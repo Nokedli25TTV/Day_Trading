@@ -7,6 +7,7 @@ import { REVIEW_INTERVALS, gradeCard, firstDue, dueCards, nextUpcoming } from ".
 import { dailyDiscipline, evaluateMock, goNoGo, THRESHOLDS } from "../dist/js/logic/readiness.js";
 import { journalStats } from "../dist/js/logic/calc.js";
 import { normalize, buildIndex, search } from "../dist/js/logic/search.js";
+import { defaultRulebook, normalizeRulebook, checklistComplete, brokenRuleCounts } from "../dist/js/logic/rulebook.js";
 
 const near = (actual, expected, tolerance = 1e-6) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
 
@@ -202,4 +203,35 @@ test("kereső: ékezet és kis-nagybetű nem számít", () => {
   assert.equal(search(index, "kockázat drawdown").length, 1);
   assert.equal(search(index, "nincsilyen").length, 0);
   assert.equal(search(index, "   ").length, 0);
+});
+
+// ---------- Szabálykönyv ----------
+
+test("szabálykönyv: az alapértékek egyedi azonosítókkal jönnek, és ismételhetők", () => {
+  const book = defaultRulebook();
+  const ids = [...book.rules, ...book.ifThen, ...book.checklist].map((entry) => entry.id);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.deepEqual(defaultRulebook(), book);
+});
+
+test("szabálykönyv: a hiányos mentés kiegészül, a meglévő lista megmarad", () => {
+  assert.deepEqual(normalizeRulebook(undefined), defaultRulebook());
+  const saved = normalizeRulebook({ rules: [{ id: "a", text: "saját" }], checklist: [] });
+  assert.deepEqual(saved.rules, [{ id: "a", text: "saját" }]);
+  assert.deepEqual(saved.checklist, []);
+  assert.equal(saved.ifThen.length, defaultRulebook().ifThen.length);
+});
+
+test("ellenőrzőlista: csak a teljes lista nyit, az üres lista nem zár", () => {
+  const list = [{ id: "a" }, { id: "b" }];
+  assert.equal(checklistComplete(list, ["a"]), false);
+  assert.equal(checklistComplete(list, ["b", "a"]), true);
+  assert.equal(checklistComplete(list), false);
+  assert.equal(checklistComplete([], []), true);
+});
+
+test("szabálykönyv: a megszegett szabályok gyakoriság szerint", () => {
+  const rules = [{ id: "a", text: "A" }, { id: "b", text: "B" }, { id: "c", text: "C" }];
+  const entries = [{ brokenRules: ["b"] }, { brokenRules: ["b", "a"] }, {}, { brokenRules: ["torolt"] }];
+  assert.deepEqual(brokenRuleCounts(entries, rules).map((row) => [row.rule.id, row.count]), [["b", 2], ["a", 1]]);
 });

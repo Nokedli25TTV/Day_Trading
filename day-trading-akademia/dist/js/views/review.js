@@ -2,6 +2,7 @@
 import { state, commit, onRender, recordActivity } from "../store.js";
 import { reviewCards } from "../review-deck.js";
 import { gradeCard, dueCards, nextUpcoming } from "../logic/review.js";
+import { recordMistake, setMistakeResolved } from "../logic/mistakes.js";
 import { getCurrentView } from "../router.js";
 import { currentTab } from "../tabs.js";
 import { $, setText, escapeHTML, formatInline, localDateKey, shortDate } from "../util.js";
@@ -59,12 +60,23 @@ function reveal() {
 function grade(known) {
   const id = session.queue[0];
   if (!id || !session.revealed) return;
+  const card = reviewCards().find((item) => item.id === id);
   const secondLook = session.again.has(id);
   session.queue.shift();
   session.revealed = false;
   // Az elrontott kártya még egyszer visszajön a mai körben, de az ütemezése holnapra szól.
   if (!secondLook) {
     state.reviews[id] = gradeCard(state.reviews[id], known, localDateKey());
+    if (known && state.mistakes[id] && !state.mistakes[id].resolvedAt) state.mistakes = setMistakeResolved(state.mistakes, id, true);
+    else if (!known && card) state.mistakes = recordMistake(state.mistakes, {
+      id,
+      source: state.mistakes[id]?.source || (card.fromQuiz ? "quiz" : "review"),
+      question: card.front,
+      lesson: card.lesson?.id,
+      selectedAnswer: "Nem tudtam önállóan felidézni.",
+      correctAnswer: card.back,
+      explanation: "A kérdés holnap ismét előkerül.",
+    });
     session.done += 1;
     if (!known) { session.again.add(id); session.queue.push(id); }
     recordActivity();

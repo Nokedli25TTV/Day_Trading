@@ -2,10 +2,13 @@
 import { state, replaceState, normalizeState, createDefaultState, commit, onRender } from "../store.js";
 import { showToast } from "../toast.js";
 import { showView, getCurrentView } from "../router.js";
-import { exportJSON } from "../features/backup.js";
-import { clearAttachments } from "../features/attachments.js";
+import { exportBackup, exportJSON } from "../features/backup.js";
+import { readBackupArchive } from "../features/backup-format.js";
+import { clearAttachments, replaceAttachments } from "../features/attachments.js";
+import { startTutorial } from "../features/tutorial.js";
 import { resetQuiz } from "./quiz.js";
 import { resetReview } from "./review.js";
+import { resetExam } from "./exam.js";
 import { $, formObject } from "../util.js";
 
 function applySettings() {
@@ -44,6 +47,7 @@ function submit(event) {
 function swapState(next, message) {
   replaceState(next);
   resetReview();
+  resetExam();
   commit(message);
   resetQuiz();
   if (getCurrentView() === "lecke") showView("tananyag");
@@ -54,11 +58,17 @@ async function importFile(event) {
   const file = event.target.files?.[0];
   if (!file) return;
   try {
-    const parsed = JSON.parse(await file.text());
+    const zipped = file.name.toLowerCase().endsWith(".zip") || file.type === "application/zip";
+    const restored = zipped ? await readBackupArchive(file) : { data: JSON.parse(await file.text()), attachments: [] };
+    const parsed = restored.data;
     if (!parsed || typeof parsed !== "object" || !parsed.profile || !parsed.progress) throw new Error("A fájl nem érvényes TradeCraft mentés.");
-    if (!confirm("Az import felülírja a jelenlegi helyi adatokat. Folytatod?")) return;
-    swapState(normalizeState(parsed), "Import kész");
-    showToast("Az adatok importálva.");
+    const next = normalizeState(parsed);
+    if (!zipped) next.journalEntries.forEach((entry) => { entry.attachment = false; });
+    const detail = zipped ? ` A csomag ${restored.attachments.length} képet tartalmaz.` : " A JSON nem tartalmaz képeket, ezért a jelenlegi képek törlődnek.";
+    if (!confirm(`Az import felülírja a jelenlegi helyi adatokat.${detail} Folytatod?`)) return;
+    await replaceAttachments(restored.attachments);
+    swapState(next, "Import kész");
+    showToast(zipped ? "A teljes mentés és a képek importálva." : "A JSON-adatok importálva.");
   } catch (error) {
     showToast(error.message || "Az import sikertelen.", true);
   } finally {
@@ -76,8 +86,10 @@ function reset() {
 export function initSettings() {
   onRender(applySettings);
   $("#settings-form").addEventListener("submit", submit);
-  $("#export-data").addEventListener("click", exportJSON);
-  $("#export-from-journal").addEventListener("click", exportJSON);
+  $("#export-data").addEventListener("click", exportBackup);
+  $("#export-json").addEventListener("click", exportJSON);
+  $("#export-from-journal").addEventListener("click", exportBackup);
+  $("#tutorial-start").addEventListener("click", startTutorial);
   $("#import-data").addEventListener("change", importFile);
   $("#reset-data").addEventListener("click", reset);
   document.addEventListener("click", (event) => {

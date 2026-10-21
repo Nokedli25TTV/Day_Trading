@@ -1,6 +1,5 @@
 // Képernyőképek a naplóbejegyzésekhez. A képek IndexedDB-ben élnek, a bejegyzés azonosítójával.
-// A JSON mentés nem tartalmazza őket: csak ezen a böngészőn maradnak meg.
-import { idbGet, idbSet, idbDelete, idbClear } from "./idb.js";
+import { idbGet, idbSet, idbDelete, idbClear, idbEntries } from "./idb.js";
 
 const MAX_SIDE = 1600;
 const urls = new Map();
@@ -35,6 +34,26 @@ export async function deleteAttachment(id) {
 export async function clearAttachments() {
   [...urls.keys()].forEach(forget);
   await idbClear("attachments");
+}
+
+export async function listAttachments() {
+  return (await idbEntries("attachments"))
+    .filter(([, blob]) => blob instanceof Blob)
+    .map(([id, blob]) => ({ id: String(id), blob }));
+}
+
+// Importnál a képek együtt cserélődnek. Hiba esetén visszaállítja a korábbi tárolót.
+export async function replaceAttachments(entries) {
+  const previous = await listAttachments();
+  [...urls.keys()].forEach(forget);
+  try {
+    await idbClear("attachments");
+    for (const { id, blob } of entries) await idbSet("attachments", id, blob);
+  } catch (error) {
+    await idbClear("attachments").catch(() => {});
+    for (const { id, blob } of previous) await idbSet("attachments", id, blob).catch(() => {});
+    throw error;
+  }
 }
 
 // Megjeleníthető URL a képhez, vagy null, ha nincs (például másik böngészőből importált naplónál).

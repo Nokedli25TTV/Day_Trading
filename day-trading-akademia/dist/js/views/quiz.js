@@ -3,6 +3,7 @@ import { DATA } from "../../data.js";
 import { state, commit, recordActivity } from "../store.js";
 import { getLesson, lessonRowHTML } from "../lessons.js";
 import { quizCardId } from "../review-deck.js";
+import { recordMistake, setMistakeResolved } from "../logic/mistakes.js";
 import { $, $$, setText, setMeter, escapeHTML, shuffle, uid, localDateKey, addDays } from "../util.js";
 
 const QUIZ_LENGTH = Math.min(12, DATA.quiz.length);
@@ -66,10 +67,25 @@ function answer(choice) {
   run.choice = choice;
   const correct = choice === question.correct;
   if (correct) run.score += 1;
-  run.answers.push({ question: question.question, lesson: question.lesson, correct });
+  const selectedAnswer = question.options[choice];
+  const correctAnswer = question.options[question.correct];
+  const cardId = quizCardId(question);
+  run.answers.push({ question: question.question, lesson: question.lesson, selectedAnswer, correctAnswer, correct });
   if (!correct) {
-    state.reviews[quizCardId(question)] = { box: 0, due: addDays(localDateKey(), 1) };
-    commit("Kérdés az ismétlők között");
+    state.reviews[cardId] = { box: 0, due: addDays(localDateKey(), 1) };
+    state.mistakes = recordMistake(state.mistakes, {
+      id: cardId,
+      source: "quiz",
+      question: question.question,
+      lesson: question.lesson,
+      selectedAnswer,
+      correctAnswer,
+      explanation: question.explanation,
+    });
+    commit("Kérdés a hibafüzetben és az ismétlők között");
+  } else if (state.mistakes[cardId] && !state.mistakes[cardId].resolvedAt) {
+    state.mistakes = setMistakeResolved(state.mistakes, cardId, true);
+    commit("Hiba javítva");
   }
   renderQuiz();
 }

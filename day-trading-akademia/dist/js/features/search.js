@@ -14,7 +14,7 @@ const TYPE_LABEL = { lesson: "Lecke", term: "Fogalom", entry: "Napló", go: "Ugr
 const DESTINATIONS = [
   ["Áttekintés", "attekintes"], ["Roadmap", "roadmap", "roadmap:plan"], ["Go / No-Go és mock evaluation", "roadmap", "roadmap:readiness"],
   ["Tananyag", "tananyag", "library:lessons"], ["Fogalomtár", "tananyag", "library:glossary"],
-  ["Tudáspróba (kvíz)", "gyakorlas", "practice:quiz"], ["Ismétlés", "gyakorlas", "practice:review"], ["Kockázati labor: pozícióméret, várható érték", "gyakorlas", "practice:risk"],
+  ["Tudáspróba (kvíz)", "gyakorlas", "practice:quiz"], ["Modulzáró vizsga", "gyakorlas", "practice:exam"], ["Hibafüzet", "gyakorlas", "practice:mistakes"], ["Ismétlés", "gyakorlas", "practice:review"], ["Kockázati labor: pozícióméret, várható érték", "gyakorlas", "practice:risk"],
   ["Megbízás-labor", "gyakorlas", "practice:order"], ["Orderflow-labor: value area, footprint", "gyakorlas", "practice:flow"], ["Prop szabályok: drawdown, consistency", "gyakorlas", "practice:prop"],
   ["Napló: új bejegyzés", "naplo", "journal:entries"], ["Napló-statisztika", "naplo", "journal:stats"], ["Heti review", "naplo", "journal:weekly"],
 ];

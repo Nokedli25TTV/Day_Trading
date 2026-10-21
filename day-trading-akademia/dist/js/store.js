@@ -11,7 +11,7 @@ export const STORAGE_KEY = new URLSearchParams(location.search).has("qa")
 // Új mezőt ide ÉS a normalizeState()-be is fel kell venni, különben a régi mentések eltörnek.
 export function createDefaultState() {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     profile: {
       experience: "kezdo",
       dailyGoal: 30,
@@ -23,6 +23,8 @@ export function createDefaultState() {
     },
     progress: {},
     quizAttempts: [],
+    moduleExams: [],
+    mistakes: {},
     journalEntries: [],
     questions: [],
     activityDates: [],
@@ -33,7 +35,7 @@ export function createDefaultState() {
     rulebook: defaultRulebook(),
     preChecks: {},
     mocks: [],
-    settings: { reducedMotion: false, theme: "system" },
+    settings: { reducedMotion: false, theme: "light", tutorialSeen: false },
   };
 }
 
@@ -43,6 +45,8 @@ export function normalizeState(parsed) {
   const object = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : {});
   const list = (value) => (Array.isArray(value) ? value : []);
   const profile = { ...fallback.profile, ...object(parsed.profile) };
+  const settings = { ...fallback.settings, ...object(parsed.settings) };
+  if ((Number(parsed.schemaVersion) || 1) < 2 && settings.theme === "system") settings.theme = "light";
   // Régi mentésnél a terv kezdete a profil létrehozásának napja.
   if (!object(parsed.profile).startDate) {
     const created = new Date(profile.createdAt);
@@ -51,11 +55,13 @@ export function normalizeState(parsed) {
   return {
     ...fallback,
     ...parsed,
-    schemaVersion: 1,
+    schemaVersion: 2,
     profile,
-    settings: { ...fallback.settings, ...object(parsed.settings) },
+    settings,
     progress: object(parsed.progress),
     quizAttempts: list(parsed.quizAttempts),
+    moduleExams: list(parsed.moduleExams),
+    mistakes: object(parsed.mistakes),
     journalEntries: list(parsed.journalEntries),
     questions: list(parsed.questions),
     activityDates: list(parsed.activityDates),

@@ -9,6 +9,8 @@ import { initReadiness } from "./views/readiness.js";
 import { initLibrary } from "./views/library.js";
 import { initLesson } from "./views/lesson.js";
 import { initQuiz } from "./views/quiz.js";
+import { initExam } from "./views/exam.js";
+import { initMistakes } from "./views/mistakes.js";
 import { initReview } from "./views/review.js";
 import { initLabs } from "./views/labs.js";
 import { initJournal } from "./views/journal.js";
@@ -22,6 +24,7 @@ import { initStudyTime } from "./features/study-time.js";
 import { initBackup } from "./features/backup.js";
 import { initSearch } from "./features/search.js";
 import { initTerms } from "./features/terms.js";
+import { initTutorial } from "./features/tutorial.js";
 import { initPWA } from "./features/pwa.js";
 import { initWebMCP } from "./features/webmcp.js";
 
@@ -29,7 +32,7 @@ initTabs();
 initRouter();
 [
   initOverview, initRoadmap, initReadiness, initLibrary, initLesson, initQuiz, initReview, initLabs,
-  initJournal, initQuestions, initStats, initWeeklyReview, initRulebook, initPrecheck, initSettings, initStudyTime, initSearch, initTerms,
+  initExam, initMistakes, initJournal, initQuestions, initStats, initWeeklyReview, initRulebook, initPrecheck, initSettings, initStudyTime, initSearch, initTerms, initTutorial,
 ].forEach((init) => init());
 
 refresh();

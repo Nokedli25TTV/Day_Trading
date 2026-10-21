@@ -1,8 +1,10 @@
 // Adatbiztonság: automatikus mentés egy választott fájlba (ahol a böngésző engedi),
-// kézi JSON export, és emlékeztető, ha régen volt mentés.
+// kézi teljes ZIP vagy JSON export, és emlékeztető, ha régen volt mentés.
 import { state, save, persist, onSave, onRender } from "../store.js";
 import { showToast } from "../toast.js";
 import { idbGet, idbSet, idbDelete } from "./idb.js";
+import { listAttachments } from "./attachments.js";
+import { createBackupArchive } from "./backup-format.js";
 import { $, setText, localDateKey, daysBetween, downloadFile, debounce, formatDate } from "../util.js";
 
 const SUPPORTED = "showSaveFilePicker" in window;
@@ -11,6 +13,11 @@ let handle = null;
 // off | active | paused (a böngésző újraindítás után újra engedélyt kér) | error
 let status = "off";
 
+const exportState = () => {
+  const copy = JSON.parse(JSON.stringify(state));
+  copy.profile.lastExportAt = new Date().toISOString();
+  return copy;
+};
 const snapshot = () => JSON.stringify(state, null, 2);
 const hasData = () => state.journalEntries.length > 0 || Object.keys(state.progress).length > 0;
 
@@ -31,11 +38,27 @@ async function writeFile() {
 const writeSoon = debounce(writeFile, 2000);
 
 export function exportJSON() {
-  downloadFile(`tradecraft-mentes-${localDateKey()}.json`, snapshot(), "application/json");
-  state.profile.lastExportAt = new Date().toISOString();
+  const data = exportState();
+  downloadFile(`tradecraft-adatok-${localDateKey()}.json`, JSON.stringify(data, null, 2), "application/json");
+  state.profile.lastExportAt = data.profile.lastExportAt;
   save("Biztonsági mentés letöltve");
-  showToast("A JSON biztonsági mentés elkészült. A képernyőképek nincsenek benne.");
+  showToast("A JSON adatmentés elkészült. Képekhez használd a teljes ZIP mentést.");
   render();
+}
+
+export async function exportBackup() {
+  try {
+    const data = exportState();
+    const attachments = await listAttachments();
+    const archive = await createBackupArchive(data, attachments);
+    downloadFile(`tradecraft-teljes-mentes-${localDateKey()}.zip`, archive, "application/zip");
+    state.profile.lastExportAt = data.profile.lastExportAt;
+    save("Teljes mentés letöltve");
+    showToast(`A teljes mentés elkészült${attachments.length ? `, ${attachments.length} képpel` : ""}.`);
+    render();
+  } catch (error) {
+    showToast(error.message || "A teljes mentés nem sikerült.", true);
+  }
 }
 
 async function enable() {
@@ -76,7 +99,7 @@ function render() {
   const days = lastExport ? daysBetween(localDateKey(new Date(lastExport)), localDateKey()) : null;
   const last = lastExport ? `Utolsó mentés: ${formatDate(localDateKey(new Date(lastExport)))}.` : "Még nem készült mentés.";
 
-  setText("#backup-status", !SUPPORTED ? `Ez a böngésző nem tud fájlba menteni automatikusan. Használd a JSON exportot. ${last}`
+  setText("#backup-status", !SUPPORTED ? `Ez a böngésző nem tud fájlba menteni automatikusan. Használd a teljes ZIP mentést. ${last}`
     : status === "active" ? `Bekapcsolva: minden változás a „${handle.name}” fájlba kerül. ${last}`
     : status === "paused" ? `Szünetel: a böngésző újra engedélyt kér a „${handle.name}” fájlhoz.`
     : status === "error" ? "A legutóbbi írás nem sikerült. Válaszd ki újra a fájlt."
@@ -103,7 +126,7 @@ export async function initBackup() {
   $("#backup-enable").addEventListener("click", enable);
   $("#backup-resume").addEventListener("click", resume);
   $("#backup-disable").addEventListener("click", disable);
-  $("#backup-notice-action").addEventListener("click", () => (status === "paused" ? resume() : SUPPORTED ? enable() : exportJSON()));
+  $("#backup-notice-action").addEventListener("click", () => (status === "paused" ? resume() : SUPPORTED ? enable() : exportBackup()));
   if (!SUPPORTED) return;
   try {
     handle = await idbGet("settings", "backupHandle");

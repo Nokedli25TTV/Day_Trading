@@ -34,13 +34,8 @@ const server = createServer(async (request, response) => {
     });
     response.end(body);
   } catch {
-    try {
-      const body = await readFile(join(root, "index.html"));
-      response.writeHead(200, { "content-type": mime[".html"], "cache-control": "no-store" });
-      response.end(body);
-    } catch {
-      response.writeHead(404).end("Nem található");
-    }
+    response.writeHead(404, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });
+    response.end("Nem található");
   }
 });
 

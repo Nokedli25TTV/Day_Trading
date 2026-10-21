@@ -8,6 +8,8 @@ import { dailyDiscipline, evaluateMock, goNoGo, THRESHOLDS } from "../dist/js/lo
 import { journalStats } from "../dist/js/logic/calc.js";
 import { normalize, buildIndex, search } from "../dist/js/logic/search.js";
 import { defaultRulebook, normalizeRulebook, checklistComplete, brokenRuleCounts } from "../dist/js/logic/rulebook.js";
+import { recordMistake, setMistakeResolved, mistakeList, mistakeSummary } from "../dist/js/logic/mistakes.js";
+import { moduleQuestionPool, evaluateExam, EXAM_PASS_PERCENT } from "../dist/js/logic/exam.js";
 
 const near = (actual, expected, tolerance = 1e-6) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
 
@@ -88,6 +90,30 @@ test("ismétlés: esedékes kártyák sorrendje és a következő alkalom", () =
   assert.deepEqual(dueCards(cards, "2026-10-07").map((card) => card.id), ["b", "c", "a"]);
   assert.deepEqual(nextUpcoming(cards, "2026-10-07"), { date: "2026-10-09", count: 2 });
   assert.equal(nextUpcoming([], "2026-10-07"), null);
+});
+
+// ---------- Hibafüzet és modulvizsga ----------
+
+test("hibafüzet: az ismételt hiba számlálódik, a javítás megmarad", () => {
+  const item = { id: "q1", question: "Kérdés?", correctAnswer: "Válasz", lesson: "lecke" };
+  let book = recordMistake({}, item, "2026-10-17T10:00:00Z");
+  book = recordMistake(book, { ...item, selectedAnswer: "Más" }, "2026-10-18T10:00:00Z");
+  assert.equal(book.q1.wrongCount, 2);
+  assert.equal(book.q1.firstWrongAt, "2026-10-17T10:00:00Z");
+  assert.equal(mistakeSummary(book).active, 1);
+  book = setMistakeResolved(book, "q1", true, "2026-10-19T10:00:00Z");
+  assert.deepEqual(mistakeSummary(book), { total: 1, active: 0, resolved: 1 });
+  assert.equal(mistakeList(book, "resolved")[0].id, "q1");
+});
+
+test("modulvizsga: a lecke önellenőrző kérdéseiből épül és 80%-tól sikeres", () => {
+  const module = { lessons: [{ id: "a", title: "A" }, { id: "b", title: "B" }] };
+  const content = { a: { check: [{ q: "A1", a: "V1" }] }, b: { check: [{ q: "B1", a: "V2" }, { q: "B2", a: "V3" }] } };
+  assert.deepEqual(moduleQuestionPool(module, content).map((item) => item.id), ["check:a:0", "check:b:0", "check:b:1"]);
+  const answers = Array.from({ length: 10 }, (_, index) => ({ correct: index < 8 }));
+  assert.equal(EXAM_PASS_PERCENT, 80);
+  assert.deepEqual(evaluateExam(answers, true), { score: 8, total: 10, percent: 80, official: true, passed: true });
+  assert.equal(evaluateExam(answers, false).passed, false);
 });
 
 // ---------- Napi fegyelem ----------

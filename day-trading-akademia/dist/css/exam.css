@@ -1,0 +1,38 @@
+/* ---------- Modulvizsga és hibafüzet ---------- */
+
+.exam-shell, .mistake-shell { max-width: 52rem; }
+.exam-picker { display: grid; grid-template-columns: auto minmax(220px, 1fr); align-items: center; gap: 0.75rem; max-width: 32rem; margin-bottom: 1.75rem; color: var(--text-2); font-size: 0.875rem; font-weight: 600; }
+.exam-intro { max-width: 44rem; }
+.exam-intro h2 { margin-top: 0.2rem; font-size: 1.75rem; letter-spacing: -0.022em; }
+.exam-intro > p:not(.eyebrow, .fine-print, .exam-latest) { margin: 0.6rem 0 1.25rem; color: var(--text-2); line-height: 1.65; }
+.exam-readiness { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.exam-readiness span { padding: 0.35rem 0.65rem; border-radius: 99px; background: var(--sunken); color: var(--text-2); font-size: 0.8125rem; font-weight: 600; }
+.exam-latest { margin: 0 0 1.25rem; color: var(--text-2); line-height: 1.55; }
+.exam-intro .fine-print { margin-top: 0.75rem; }
+.exam-topline { display: grid; grid-template-columns: auto minmax(120px, 1fr) auto; align-items: center; gap: 1rem; max-width: 44rem; color: var(--text-3); font-size: 0.875rem; font-weight: 550; }
+.exam-topline .meter { margin: 0; }
+.exam-question { max-width: 44rem; margin-top: 1.5rem; padding: 1.5rem 1.6rem 1.6rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.exam-question h2 { margin-top: 0.4rem; font-size: 1.375rem; line-height: 1.4; letter-spacing: -0.015em; }
+
+.mistake-shell .block-head { align-items: end; }
+.mistake-shell .block-head h2 { font-size: 1.5rem; }
+.mistake-shell .block-head p { margin-top: 0.25rem; color: var(--text-2); }
+.mistake-shell .block-head label { display: grid; gap: 0.25rem; color: var(--text-3); font-size: 0.8125rem; font-weight: 600; }
+.mistake-list { display: grid; gap: 0; margin-top: 1.25rem; border-top: 1px solid var(--line); }
+.mistake-card { padding: 1.4rem 0; border-bottom: 1px solid var(--line); }
+.mistake-card.is-resolved { opacity: 0.72; }
+.mistake-card__meta { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; color: var(--text-3); font-size: 0.8125rem; font-weight: 550; }
+.mistake-card h3 { margin-top: 0.4rem; font-size: 1.125rem; line-height: 1.45; }
+.mistake-card__wrong, .mistake-card__right, .mistake-card__explanation { margin-top: 0.6rem; line-height: 1.6; }
+.mistake-card__wrong { color: var(--bad); }
+.mistake-card__right { color: var(--good); }
+.mistake-card__explanation { color: var(--text-2); }
+.mistake-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 1rem; }
+.mistake-card__actions .text-button { margin-left: auto; }
+
+@media (max-width: 560px) {
+  .exam-picker { grid-template-columns: minmax(0, 1fr); }
+  .exam-question { padding: 1.15rem; }
+  .exam-question h2 { font-size: 1.1875rem; }
+  .mistake-card__actions .text-button { width: 100%; margin-left: 0; justify-content: flex-start; }
+}

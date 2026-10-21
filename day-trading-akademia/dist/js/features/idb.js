@@ -28,3 +28,16 @@ export const idbGet = (store, key) => run(store, "readonly", (objects) => object
 export const idbSet = (store, key, value) => run(store, "readwrite", (objects) => objects.put(value, key));
 export const idbDelete = (store, key) => run(store, "readwrite", (objects) => objects.delete(key));
 export const idbClear = (store) => run(store, "readwrite", (objects) => objects.clear());
+
+export async function idbEntries(store) {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(store, "readonly");
+    const objects = transaction.objectStore(store);
+    const keys = objects.getAllKeys();
+    const values = objects.getAll();
+    transaction.oncomplete = () => resolve(keys.result.map((key, index) => [key, values.result[index]]));
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
+  });
+}

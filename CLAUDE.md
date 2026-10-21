@@ -17,7 +17,8 @@ Ha egy fájl 250 sor fölé nő, bontsd szét, mielőtt továbbírod.
 
 ## Futtatás és ellenőrzés
 
-Nincs build lépés és nincs függőség: a `day-trading-akademia/dist` mappa maga az oldal.
+Nincs build lépés: a `day-trading-akademia/dist` mappa maga az oldal. Az alkalmazás futásidejű
+függőségmentes; a Playwright csak fejlesztői függőség a valódi böngészős ellenőrzésekhez.
 A kód ES modulokból áll, ezért webszerverről kell megnyitni (fájlként megnyitva nem indul el).
 A felhasználó a gyökérben lévő `Inditas.bat` fájllal indítja: ez elindítja a `preview-server.mjs`-t
 (`http://127.0.0.1:4173`) és megnyitja a böngészőt. Ha az alkalmazás nem indul el, az `index.html`
@@ -25,9 +26,11 @@ alján lévő figyelő látható hibaüzenetet tesz ki (`#boot-error`); a `main.
 jelzővel szól, hogy elindult.
 
 ```bash
-node .claude/static-server.mjs                 # előnézet (a .claude/launch.json "akademia" konfigja ezt indítja)
-cd day-trading-akademia && node --test         # az összes teszt
-node day-trading-akademia/tools/make-icons.mjs # az alkalmazásikonok újragenerálása
+cd day-trading-akademia && npm ci && npx playwright install chromium # első fejlesztői beállítás
+node .claude/static-server.mjs                     # előnézet (a .claude/launch.json "akademia" konfigja ezt indítja)
+cd day-trading-akademia && npm test                # egység- és böngészőtesztek
+cd day-trading-akademia && npm run test:unit       # csak a gyors egységtesztek
+node day-trading-akademia/tools/make-icons.mjs     # az alkalmazásikonok újragenerálása
 ```
 
 - A `?qa=1` paraméter külön tárolókulcsot használ (`tradecraft-academy-qa-v1`), így a teszt
@@ -81,14 +84,14 @@ sort tölt be; a többi modul importtal kapcsolódik.
 | `js/store.js` | Az állapot: betöltés, mentés, `commit()`, `onRender()`. |
 | `js/router.js`, `js/tabs.js` | Nézetváltás hash-sel; fülek `data-tab="csoport:név"` / `data-panel` párokkal. |
 | `js/lessons.js`, `js/review-deck.js`, `js/labels.js`, `js/util.js` | Közös modell és segédfüggvények. |
-| `js/logic/` | **Tiszta számolás**, DOM és állapot nélkül, tesztekkel: `calc`, `dates`, `schedule`, `review`, `readiness`, `rulebook`, `search`. |
-| `js/views/` | Egy nézet vagy fül = egy modul (`overview`, `roadmap`, `readiness`, `library`, `lesson`, `quiz`, `review`, `labs`, `journal`, `precheck`, `rulebook`, `questions`, `stats`, `weekly-review`, `settings`). |
-| `js/features/` | Nézetfüggetlen funkciók (`backup`, `attachments`, `idb`, `search`, `terms`, `study-time`, `pwa`, `webmcp`). |
+| `js/logic/` | **Tiszta számolás**, DOM és állapot nélkül, tesztekkel: `calc`, `dates`, `schedule`, `review`, `exam`, `mistakes`, `readiness`, `rulebook`, `search`. |
+| `js/views/` | Egy nézet vagy fül = egy modul (`overview`, `roadmap`, `library`, `lesson`, `quiz`, `exam`, `mistakes`, `review`, `labs`, `journal`, `readiness`, `settings` stb.). |
+| `js/features/` | Nézetfüggetlen funkciók (`backup`, `attachments`, `idb`, `search`, `terms`, `tutorial`, `study-time`, `pwa`, `webmcp`). |
 | `js/lock/` | A nyilvános kiadás belépése: `crypto.js` (böngészőben és Node-ban is fut), `unlock.js`. Helyben nem töltődik be. |
 | `js/charts.js`, `js/diagrams.js` | SVG vonaldiagram; leckeábrák és a laborokkal közös megjelenítők. |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Offline működés és telepíthetőség. |
 | `tools/` | `build-public.mjs` (titkosított kiadás), `make-icons.mjs` (ikonok). |
-| `tests/` | `node --test`: számolás, logika, tartalom épsége, offline lista és jelölők. |
+| `tests/` | Egységtesztek és `browser/` alatt Playwright-próbák: számolás, tartalom, offline lista, asztali és mobil működés. |
 
 ### Hogyan kapcsolódnak a modulok
 
@@ -106,11 +109,12 @@ a `store.js`-ben; régi és importált mentést a `normalizeState()` egészít k
 vegyél fel**, különben a meglévő felhasználói adat eltörik.
 
 Mezők: `profile` (napi cél, `dailyLimitR`, `startDate`, `lastExportAt`), `progress[leckeId]`, `quizAttempts`,
-`journalEntries` (benne `brokenRules[]`), `questions`, `reviews[kártyaId]`, `studyLog[nap]`, `weeklyReviews`,
-`readiness[kulcs]`, `mocks`, `rulebook` (`rules`, `ifThen`, `checklist`), `preChecks[nap]`, `activityDates`, `settings`.
+`moduleExams`, `mistakes[kérdésId]`, `journalEntries` (benne `brokenRules[]`), `questions`, `reviews[kártyaId]`,
+`studyLog[nap]`, `weeklyReviews`, `readiness[kulcs]`, `mocks`, `rulebook` (`rules`, `ifThen`, `checklist`),
+`preChecks[nap]`, `activityDates`, `settings` (téma, csökkentett mozgás, `tutorialSeen`).
 
 IndexedDB (`tradecraft-akademia`): a napló képernyőképei és az automatikus mentés fájlkezelője.
-Ezek nincsenek benne a JSON mentésben.
+A képernyőképek a teljes ZIP mentésben benne vannak; a külön JSON export csak az állapotot tartalmazza.
 
 ### Új fájl hozzáadásakor
 
@@ -120,7 +124,7 @@ Ezek nincsenek benne a JSON mentésben.
 
 ### CSS betöltési sorrend
 
-`tokens → base → layout → components → overview → lessons → practice → journal → features → lock → rulebook → responsive`.
+`tokens → base → layout → components → overview → lessons → practice → exam → journal → features → lock → rulebook → tutorial → responsive`.
 A médialekérdezések a `responsive.css`-be (vagy a `features.css` végére) kerülnek: ha korábbi fájlba
 teszed őket, a később betöltött alapszabály felülírja, és telefonon szétesik az elrendezés.
 
@@ -144,7 +148,7 @@ teszed őket, a később betöltött alapszabály felülírja, és telefonon sz�
 
 Papír + kék tinta: nyugodt tanulófelület, szándékosan nem „kereskedési terminál”.
 
-- **Színek:** OKLCH tokenek a `css/tokens.css`-ben. A sötét értékek kétszer szerepelnek
+- **Színek:** világos, levegős kék-papír alap és lágyabb „szürkület” mód, OKLCH tokenekkel a `css/tokens.css`-ben. A sötét értékek kétszer szerepelnek
   (`prefers-color-scheme` és `[data-theme="dark"]`): mindkettőt módosítsd.
 - **A zöld és a piros jelentést hordoz** (helyes/hibás, bid/ask, nyerő/vesztő R). Díszítésre és
   haladásjelzésre a kék (`--accent`) való.
@@ -185,16 +189,18 @@ Papír + kék tinta: nyugodt tanulófelület, szándékosan nem „kereskedési 
 - **6. kör (2026-10-08):** a repó nyilvános lett, az oldal GitHub Pages-re került. Szabálykönyv (szabályok,
   ha–akkor tervek, nyomtatható), kereskedés előtti ellenőrzőlista, amely zárja az új naplóbejegyzést, és a
   megszegett szabályok követése a naplóban és a statisztikában. 58 teszt.
+- **7. kör (2026-10-19):** teljes ZIP mentés a napló képernyőképeivel, modulzáró vizsga és automatikus
+  hibafüzet. Világosabb paletta és hétlépéses, kiemelős alkalmazásbemutató. Playwright ellenőrzések asztali
+  és mobil Chromiumon, valamint valódi 404 válasz a hiányzó előnézeti fájlokra. 63 egységteszt és 12 böngészőteszt.
 
 ### Nyitott ötletek
 
-- Vizsga mód modulzáró teszttel; generált számolós feladatok; charthelyzet-gyakorló; hibafüzet.
+- Generált számolós feladatok; charthelyzet-gyakorló.
 - Setup-kártyák saját statisztikával; érzelmi minták; havi összefoglaló a heti review-kból.
 - Session-óra magyar idő szerint; saját kontraktus-puska; prop cég összehasonlító lap; CSV import a platformból.
 - Szinkron eszközök között; emlékeztetők; a kezdőlap testreszabása; angol felület.
 
 - A betűtípus helyben tárolása (most a service worker gyorsítótárazza az első online betöltés után).
-- A képernyőképek belefoglalása a mentésbe (például külön ZIP export).
 - További leckeábrák: delta és CVD, erőfeszítés és eredmény, session-idők.
 - A tartalom lektorálása a felhasználóval; az adózási lecke ellenőrzése szakemberrel.
 - A régi, külső tárhelyen lévő változat (`.openai/hosting.json`) elavult; azt csak a felhasználó tudja frissíteni vagy törölni.

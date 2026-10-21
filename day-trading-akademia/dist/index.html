@@ -3,15 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f9f8f5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#14161d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f3f7ff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#34435d" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Interaktív magyar day trading tanulóplatform 6 hónapos roadmapdel, kvízekkel, kalkulátorokkal és naplóval." />
     <title>TradeCraft Akadémia</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%233348c2'/%3E%3Cpath d='M20 44V32m12 12V20m12 24V28' stroke='%23f9f8f5' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
     <script>
       try {
         var key = new URLSearchParams(location.search).has("qa") ? "tradecraft-academy-qa-v1" : "tradecraft-academy-v1";
-        var theme = (JSON.parse(localStorage.getItem(key) || "{}").settings || {}).theme;
+        var saved = JSON.parse(localStorage.getItem(key) || "{}");
+        var theme = (saved.settings || {}).theme || "light";
+        if ((Number(saved.schemaVersion) || 1) < 2 && theme === "system") theme = "light";
         if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
       } catch (error) {}
     </script>
@@ -27,10 +29,12 @@
     <link rel="stylesheet" href="./css/overview.css" />
     <link rel="stylesheet" href="./css/lessons.css" />
     <link rel="stylesheet" href="./css/practice.css" />
+    <link rel="stylesheet" href="./css/exam.css" />
     <link rel="stylesheet" href="./css/journal.css" />
     <link rel="stylesheet" href="./css/features.css" />
     <link rel="stylesheet" href="./css/lock.css" />
     <link rel="stylesheet" href="./css/rulebook.css" />
+    <link rel="stylesheet" href="./css/tutorial.css" />
     <link rel="stylesheet" href="./css/responsive.css" />
   </head>
   <body>
@@ -308,6 +312,8 @@
           <p class="view-lead">Ne csak olvasd: válaszolj, számolj, majd ellenőrizd a gondolatmenetedet.</p>
           <div class="tab-list" role="tablist" aria-label="Gyakorlóeszközök">
             <button class="practice-tab active" type="button" role="tab" aria-selected="true" aria-controls="quiz-panel" data-tab="practice:quiz">Tudáspróba</button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="exam-panel" data-tab="practice:exam">Modulvizsga <span class="tab-count" id="exam-count" hidden></span></button>
+            <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="mistake-panel" data-tab="practice:mistakes">Hibafüzet <span class="tab-count" id="mistake-count" hidden></span></button>
             <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="review-panel" data-tab="practice:review">Ismétlés <span class="tab-count" id="review-count" hidden></span></button>
             <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="risk-panel" data-tab="practice:risk">Kockázati labor</button>
             <button class="practice-tab" type="button" role="tab" aria-selected="false" aria-controls="order-panel" data-tab="practice:order">Megbízás-labor</button>
@@ -319,6 +325,23 @@
             <div class="quiz">
               <div class="quiz-topline"><span id="quiz-counter"></span><div class="meter"><span id="quiz-progress-bar"></span></div><span id="quiz-score">0 pont</span></div>
               <div id="quiz-content"></div>
+            </div>
+          </section>
+
+          <section class="practice-panel" id="exam-panel" data-panel="practice:exam" role="tabpanel" hidden>
+            <div class="exam-shell">
+              <label class="exam-picker">Vizsgamodul<select id="exam-module"></select></label>
+              <div id="exam-content"></div>
+            </div>
+          </section>
+
+          <section class="practice-panel" id="mistake-panel" data-panel="practice:mistakes" role="tabpanel" hidden>
+            <div class="mistake-shell">
+              <div class="block-head">
+                <div><h2>Hibafüzet</h2><p id="mistake-summary"></p></div>
+                <label>Mutasd<select id="mistake-filter"><option value="active">Aktív hibák</option><option value="resolved">Megértett</option><option value="all">Mind</option></select></label>
+              </div>
+              <div class="mistake-list" id="mistake-list"></div>
             </div>
           </section>
 
@@ -459,7 +482,7 @@
         <section class="app-view" id="view-naplo" data-view="naplo" aria-labelledby="page-title" hidden>
           <div class="view-lead-row">
             <p class="view-lead">Rögzítsd a szimulált helyzetet, a szabálykövetést és a tanulságot. A napló ezen a böngészőn marad.</p>
-            <div class="button-row"><button class="secondary-button" id="export-csv" type="button" hidden>Napló táblázatba (CSV)</button><button class="secondary-button" id="export-from-journal" type="button">Teljes mentés (JSON)</button></div>
+            <div class="button-row"><button class="secondary-button" id="export-csv" type="button" hidden>Napló táblázatba (CSV)</button><button class="secondary-button" id="export-from-journal" type="button">Teljes mentés (ZIP)</button></div>
           </div>
           <div class="tab-list" role="tablist" aria-label="Napló részei">
             <button class="practice-tab active" type="button" role="tab" aria-selected="true" aria-controls="journal-entries" data-tab="journal:entries">Bejegyzések</button>
@@ -627,13 +650,13 @@
         <label>Napi tanulási cél<select name="dailyGoal"><option value="15">15 perc</option><option value="30">30 perc</option><option value="45">45 perc</option><option value="60">60 perc</option></select></label>
         <label>Napi veszteséglimit (R)<input name="dailyLimitR" type="number" min="0.5" step="0.5" inputmode="decimal" /></label>
         <label>A terv kezdete<input name="startDate" type="date" /></label>
-        <label>Megjelenés<select name="theme"><option value="system">Rendszer szerint</option><option value="light">Világos</option><option value="dark">Sötét</option></select></label>
+        <label>Megjelenés<select name="theme"><option value="light">Világos, levegős</option><option value="system">Rendszer szerint</option><option value="dark">Szürkület</option></select></label>
         <label class="toggle-row"><span><strong>Csökkentett mozgás</strong><small>Minimalizálja az animációkat.</small></span><input name="reducedMotion" type="checkbox" /></label>
         <button class="primary-button" type="submit">Beállítások mentése</button>
       </form>
       <div class="data-actions">
         <h3>Saját adatmentés</h3>
-        <p>A haladás, a jegyzetek és a napló csak ezen a böngészőn tárolódik. A képernyőképek a JSON mentésbe nem kerülnek bele.</p>
+        <p>A teljes ZIP mentés a haladást, a naplót és a képernyőképeket is tartalmazza. A külön JSON export csak az adatokat menti.</p>
         <p class="backup-status" id="backup-status"></p>
         <div class="button-row">
           <button class="primary-button" id="backup-enable" type="button">Automatikus mentés fájlba</button>
@@ -643,12 +666,24 @@
           <button class="secondary-button" id="lock-logout" type="button" hidden>Kijelentkezés</button>
         </div>
         <div class="button-row">
-          <button class="secondary-button" id="export-data" type="button">JSON export</button>
-          <label class="secondary-button file-button">JSON import<input id="import-data" type="file" accept="application/json,.json" /></label>
+          <button class="secondary-button" id="tutorial-start" type="button">Alkalmazás bemutatása</button>
+          <button class="secondary-button" id="export-data" type="button">Teljes mentés (ZIP)</button>
+          <button class="secondary-button" id="export-json" type="button">Csak adatok (JSON)</button>
+          <label class="secondary-button file-button">Mentés importálása<input id="import-data" type="file" accept="application/zip,application/json,.zip,.json" /></label>
           <button class="danger-button" id="reset-data" type="button">Minden adat törlése</button>
         </div>
       </div>
     </dialog>
+
+    <div class="tutorial" id="tutorial" hidden>
+      <div class="tutorial-shade" data-tutorial-shade="top"></div><div class="tutorial-shade" data-tutorial-shade="bottom"></div>
+      <div class="tutorial-shade" data-tutorial-shade="left"></div><div class="tutorial-shade" data-tutorial-shade="right"></div>
+      <div class="tutorial-highlight" id="tutorial-highlight"></div>
+      <section class="tutorial-card" id="tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+        <p class="tutorial-step" id="tutorial-step"></p><h2 id="tutorial-title"></h2><p id="tutorial-text"></p>
+        <div class="tutorial-actions"><button class="text-button" id="tutorial-skip" type="button">Kihagyás</button><button class="secondary-button" id="tutorial-back" type="button">← Vissza</button><button class="primary-button" id="tutorial-next" type="button">Tovább →</button></div>
+      </section>
+    </div>
 
     <dialog class="modal search-modal" id="search-dialog" aria-label="Keresés">
       <label class="search-field"><span class="sr-only">Keresés az egész oldalon</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="search-input" type="search" placeholder="Lecke, fogalom, naplóbejegyzés vagy labor…" role="combobox" aria-expanded="true" aria-controls="search-results" aria-autocomplete="list" autocomplete="off" /></label>
